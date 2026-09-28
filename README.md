@@ -1,4 +1,4 @@
-# Ecom-Service-Agent: 从0到1实战企业级电商客服Agent系统
+# 小飞：面向真实业务的电商智能客服系统
 ---
 
 ## 快速开始（Quick Start）
@@ -100,45 +100,60 @@ Kubernetes 的 3 副本 Deployment、Service 和 HPA 示例位于 `deploy/k8s.ya
 
 ---
 
-### 为什么选电商客服？
+## 项目介绍
 
-电商客服是 Agent 最经典的落地场景之一：业务逻辑清晰（查订单、退换货、推荐商品、售后处理），大家容易理解，面试中也经常被问到。做完这个项目，你不仅能掌握 Agent 核心技术栈，还能直接写进简历。
+“小飞”是一个可直接通过命令行或 HTTP API 使用的电商智能客服系统。它不是只根据提示词生成回答的聊天机器人，而是由大模型负责理解与决策，再通过业务工具、知识库、记忆和标准操作流程完成订单查询、物流跟踪、商品推荐、退换货及投诉分流等任务。
 
+系统面向多用户场景设计。每个用户和会话拥有独立的上下文与持久化文件；同一用户的请求按顺序处理，不同用户可以并行调用模型。HTTP 中间件提供并发限制、排队超时、请求追踪和过载保护，Docker 与 Kubernetes 配置则用于容器化部署和横向扩容。
 
+### 核心能力
 
-### 技术演进路线（更新预告）
+| 能力 | 说明 |
+|------|------|
+| ReAct 与工具调用 | 模型根据问题选择订单、物流、商品、退款、知识检索等业务工具，并结合结果生成回答 |
+| 结构化输出 | 每次回复都包含意图、置信度、是否转人工和可选追问，便于上层系统消费 |
+| RAG 知识检索 | 从退换货政策、配送说明、会员权益和 FAQ 中检索依据，降低规则类回答的幻觉 |
+| Multi-Agent | 可将售前、售后和投诉请求路由给具有独立提示词及工具权限的专家 Agent |
+| 用户记忆 | 保存会话内事实和跨会话长期偏好，并按用户隔离 |
+| Skill 工作流 | 按需加载退货、订单跟踪和商品推荐等标准操作流程，避免系统提示无限膨胀 |
+| MCP 集成 | 可连接独立 MCP 工具服务，也能在连接失败时回退到本地工具 |
+| 多用户并发 | FastAPI 异步入口、工作线程执行、用户级锁、会话池、并发限制和 503 背压 |
+| 评估体系 | 支持黄金测试集、过程轨迹、规则指标以及可选的 LLM-as-Judge |
+| 容器部署 | 提供 Dockerfile，以及带健康检查、Service 和 HPA 的 Kubernetes 示例 |
 
-本项目会按照由浅入深的节奏，逐步叠加 Agent 相关技术：
+### 请求处理流程
 
-**基础篇**
-- 纯 Prompt 实现客服对话
-- 结构化输出（Structured Output）
-- 多轮对话管理
+```text
+CLI / HTTP 客户端
+        │
+        ▼
+请求追踪与并发限制中间件
+        │
+        ▼
+按 user_id / session_id 获取独立 Agent
+        │
+        ├── 单 Agent ReAct
+        └── Multi-Agent 路由（可选）
+                │
+                ▼
+     Memory + Skill + RAG + 业务工具
+                │
+                ▼
+结构化客服回复 + 会话持久化
+```
 
-**进阶篇**
-- ReAct 范式的 Agent（思考-行动交替，最经典的 Agent 范式）
-- 工具调用 / Function Calling（查订单、查库存等）
-- MCP（Model Context Protocol）集成
-- RAG 检索增强生成（接入商品库、FAQ、退换货政策等）
+### 架构设计原则
 
-**高级篇**
-- Multi-Agent 协作（客服路由、售前售后分流）
-- Memory：短期记忆 & 长期记忆
-- Skill：可复用的能力模块（退货处理、订单跟踪等标准化流程）✅
-- Agent 评估体系 ✅
-
-**生产篇**
-- Guardrails 安全护栏（Prompt Injection 检测、输出幻觉校验、敏感信息过滤、意图越界拦截）
-- Human-in-the-Loop 人机协作（置信度评估与自动转人工、Agent↔真人客服交接协议、上下文传递）
-- Agent Observability 可观测性（调用链 Trace、Token/延迟指标采集、工具成功率看板、异常告警）
-
-> 以上为初步规划，实际更新可能会根据大家的反馈进行调整。
+- **业务能力与模型解耦**：订单、物流、退款等确定性操作由工具执行，大模型负责理解、规划和组织语言。
+- **用户状态隔离**：会话文件、短期记忆、长期记忆和工具上下文均按用户绑定，避免并发请求串数据。
+- **渐进式加载上下文**：知识通过 RAG 检索，流程通过 Skill 按需加载，减少无关提示内容和 token 消耗。
+- **同步能力异步接入**：现有同步 Agent 通过工作线程执行，避免阻塞 FastAPI 事件循环。
+- **过载时快速失败**：达到并发上限后请求进入有限等待，超时返回 `503 Retry-After`，防止服务被无限请求拖垮。
+- **部署方式可扩展**：本地可运行单进程服务，容器环境可通过 Kubernetes 副本和 HPA 扩展吞吐量。
 
 ---
 
-## 项目架构 & 更新历史
-
-> 这是本项目最核心的部分，会随着每一期的更新持续完善。
+## 项目架构
 
 ### 当前架构
 
@@ -150,7 +165,8 @@ ecom-service-agent/
 │
 ├── app/                           # 主 Bot 全部代码 + 数据
 │   ├── config/
-│   │   └── settings.py            # 配置管理（从 .env 读取，含 MCP / RAG / Multi-Agent / Memory / Skill / Evaluation 配置）
+│   │   ├── settings.py            # 环境配置与并发参数
+│   │   └── openai_client.py       # 统一创建模型客户端并控制系统代理
 │   ├── prompts/
 │   │   ├── customer_service.py    # 电商客服 system prompt（含工具使用指南 + 记忆能力）
 │   │   ├── summarizer.py          # 历史摘要 prompt
@@ -159,17 +175,17 @@ ecom-service-agent/
 │   │   └── evaluation.py          # LLM-as-judge prompt（回答质量 / 幻觉 / 过程合理性）
 │   ├── schemas/
 │   │   └── response.py            # 结构化输出 schema（Pydantic）
-│   ├── agent/                     # Agent 核心实现 + 全部 Agent 技术栈（tools / rag / skills）
+│   ├── agent/                     # Agent 核心、工具、知识库、记忆与技能
 │   │   ├── chat.py                # 核心 ReAct 循环（集成 MemoryManager + SkillManager）
 │   │   ├── summarizer.py          # LLM 自我压缩老对话（支持工具消息）
 │   │   ├── storage.py             # 会话 JSON 持久化（含短期记忆）
-│   │   ├── memory/                # 记忆系统（第7期）
+│   │   ├── memory/                # 短期与长期记忆系统
 │   │   │   ├── __init__.py        # 导出 MemoryManager / ShortTermMemory / LongTermMemory
 │   │   │   ├── manager.py         # MemoryManager：统一管理短期 + 长期记忆
 │   │   │   ├── short_term.py      # 短期记忆：会话内事实提取
 │   │   │   ├── long_term.py       # 长期记忆：跨会话持久化（JSON per user）
 │   │   │   └── extraction.py      # LLM 事实提取（共用模块）
-│   │   ├── skills/                # Skill 模块（第8期）：代码 + 技能内容分层
+│   │   ├── skills/                # Skill 发现、目录与按需加载
 │   │   │   ├── __init__.py        # 导出 SkillManager / SkillMeta
 │   │   │   ├── loader.py          # SkillManager：扫描、发现、加载 SKILL.md（渐进式披露）
 │   │   │   └── definitions/       # 技能内容（遵循 Agent Skills 开放标准，每个一个 SKILL.md）
@@ -179,7 +195,7 @@ ecom-service-agent/
 │   │   │       │   └── SKILL.md   # 订单物流跟踪技能（查单→查物流→综合建议）
 │   │   │       └── product-recommend/
 │   │   │           └── SKILL.md   # 商品推荐技能（了解需求→查偏好→搜索→推荐）
-│   │   ├── strategies/            # (upcoming) Agent 执行策略
+│   │   ├── strategies/            # Agent 执行策略扩展目录
 │   │   ├── tools/                 # 电商工具集（Function Calling）
 │   │   │   ├── mock_data.py       # Mock 数据：订单、商品、物流
 │   │   │   ├── registry.py        # 本地工具注册表 + OpenAI schema + 分发执行
@@ -207,7 +223,7 @@ ecom-service-agent/
 │   ├── mcp_client/                # MCP Client（同步封装）
 │   │   ├── client.py              # MCPClient：后台线程管理异步连接
 │   │   └── converter.py           # MCP Tool schema → OpenAI function calling 格式
-│   ├── evaluation/                # Agent 评估体系（第9期）
+│   ├── evaluation/                # Agent 离线评估体系
 │   │   ├── __init__.py            # 导出 EvalCase / Sandbox / Evaluator / RunTrace 等
 │   │   ├── dataset.py             # EvalCase 数据结构 + load_dataset
 │   │   ├── trace.py               # RunTrace：沙箱采集的过程+结果载体
@@ -215,15 +231,21 @@ ecom-service-agent/
 │   │   ├── metrics.py             # 过程/结果双层指标（代码规则 + LLM judge）
 │   │   ├── evaluator.py           # Evaluator：跑用例 → 双层评分 → 聚合报告
 │   │   └── cases.json             # 黄金测试集（~10 条，引用 mock 数据）
-│   ├── multi_agent/               # Multi-Agent 协作（第6期）
+│   ├── multi_agent/               # 售前、售后、投诉多 Agent 协作
 │   │   ├── router.py              # 意图路由器（LLM 分类 → 子 Agent）
 │   │   ├── agents.py              # SubAgent 子 Agent 类 + 配置
 │   │   └── orchestrator.py        # 编排器：路由 → 执行 → 结构化提取（集成 MemoryManager + SkillManager）
 │   ├── scripts/
 │   │   ├── build_kb_index.py      # 离线构建知识库索引（--backend numpy/chroma）
-│   │   └── run_eval.py            # 离线运行评估（--mode single/multi · --judge/--no-judge · --output）
+│   │   ├── run_eval.py            # 离线运行评估（--mode single/multi · --judge/--no-judge · --output）
+│   │   └── chat_client.py         # 支持 user_id/session_id 的多终端客户端
+│   ├── server/
+│   │   ├── api.py                 # FastAPI 路由、健康检查与上游异常映射
+│   │   ├── middleware.py          # 请求追踪、并发限制和过载背压
+│   │   └── pool.py                # Agent 会话池、用户锁和状态隔离
 │   └── sessions/                  # 运行时生成，已 .gitignore
 │       ├── session.json           # 当前会话快照
+│       ├── concurrent/            # HTTP 多用户会话，按 user_id/session_id 保存
 │       ├── kb_index.json          # NumpyBackend 索引
 │       ├── chroma/                # ChromaBackend 持久化目录
 │       └── memory/                # 长期记忆存储（按 user_id 分文件）
@@ -231,6 +253,9 @@ ecom-service-agent/
 │
 ├── mcp_server/                    # MCP Server（独立微服务）
 │   └── server.py                  # FastMCP + Streamable HTTP，暴露电商工具
+├── deploy/
+│   └── k8s.yaml                   # Deployment、Service、健康检查与 HPA
+├── Dockerfile                     # HTTP 服务容器镜像
 │
 └── tests/                         # 全部测试
     ├── test_agent.py              # 结构化输出 + 多轮 + reset
@@ -241,5 +266,6 @@ ecom-service-agent/
     ├── test_multi_agent.py        # Multi-Agent 协作
     ├── test_memory.py             # Memory 短期记忆 & 长期记忆
     ├── test_skills.py             # Skill 可复用能力模块
-    └── test_evaluation.py         # Agent 评估体系（沙箱 + 双层测评）
+    ├── test_evaluation.py         # Agent 评估体系（沙箱 + 双层测评）
+    └── test_concurrency.py        # 用户隔离、并行执行、容量竞态和过载保护
 ```
