@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xiaofei-customer-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: xiaofei-customer-service
+  template:
+    metadata:
+      labels:
+        app: xiaofei-customer-service
+    spec:
+      containers:
+        - name: api
+          image: your-registry/xiaofei-customer-service:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: xiaofei-api-secrets
+          env:
+            - name: SERVER_MAX_CONCURRENCY
+              value: "32"
+            - name: SERVER_MAX_SESSIONS
+              value: "1000"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          volumeMounts:
+            - name: sessions
+              mountPath: /app/app/sessions
+      volumes:
+        - name: sessions
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xiaofei-customer-service
+spec:
+  selector:
+    app: xiaofei-customer-service
+  ports:
+    - port: 80
+      targetPort: 8000
+  # 演示环境保持同一客户端落到同一 Pod，生产环境建议改用 Redis 会话存储。
+  sessionAffinity: ClientIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: xiaofei-customer-service
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: xiaofei-customer-service
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 65

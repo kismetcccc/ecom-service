@@ -1,0 +1,10 @@
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.tmp
+.env
+app/sessions
+pytest-cache-files-*
