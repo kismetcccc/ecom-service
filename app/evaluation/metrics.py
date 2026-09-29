@@ -124,14 +124,19 @@ def judge_answer_quality(
 ) -> tuple[float, str]:
     """回答质量 judge：返回 (score 1-5, reason)。解析失败返回 (0.0, 原因)。"""
     ref_text = "、".join(reference) if reference else "（无）"
-    prompt = ANSWER_QUALITY_PROMPT.format(
-        user_input=user_input, reply=reply, reference=ref_text
+    evaluation_data = (
+        f"【用户问题】\n{user_input}\n\n"
+        f"【客服回复】\n{reply}\n\n"
+        f"【参考要点】\n{ref_text}"
     )
     try:
         response = client.chat.completions.create(
             model=model,
             temperature=0.0,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": ANSWER_QUALITY_PROMPT},
+                {"role": "user", "content": evaluation_data},
+            ],
         )
         data = _parse_json(response.choices[0].message.content or "")
         return float(data["score"]), data.get("reason", "")
@@ -155,12 +160,18 @@ def judge_faithfulness(
         )
     else:
         obs_text = "（本次会话未调用任何工具）"
-    prompt = HALLUCINATION_PROMPT.format(reply=reply, observations=obs_text)
+    evaluation_data = (
+        f"【客服回复】\n{reply}\n\n"
+        f"【本次会话的工具观察】\n{obs_text}"
+    )
     try:
         response = client.chat.completions.create(
             model=model,
             temperature=0.0,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": HALLUCINATION_PROMPT},
+                {"role": "user", "content": evaluation_data},
+            ],
         )
         data = _parse_json(response.choices[0].message.content or "")
         faithful = bool(data["faithful"])
@@ -183,14 +194,18 @@ def judge_process_soundness(
     返回 (score 1-5, reason)。解析失败返回 (0.0, 原因)。
     """
     seq_text = " → ".join(tool_sequence) if tool_sequence else "（未调用任何工具）"
-    prompt = PROCESS_SOUNDNESS_PROMPT.format(
-        user_input=user_input, tool_sequence=seq_text
+    evaluation_data = (
+        f"【用户问题】\n{user_input}\n\n"
+        f"【实际工具调用序列】\n{seq_text}"
     )
     try:
         response = client.chat.completions.create(
             model=model,
             temperature=0.0,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": PROCESS_SOUNDNESS_PROMPT},
+                {"role": "user", "content": evaluation_data},
+            ],
         )
         data = _parse_json(response.choices[0].message.content or "")
         return float(data["score"]), data.get("reason", "")

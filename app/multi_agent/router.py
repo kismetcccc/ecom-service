@@ -21,8 +21,15 @@ class Router:
         """返回子 Agent 标识: "presale" / "postsale" / "complaint"。"""
         recent_context = ""
         if history:
+            context_messages = history
+            if (
+                history[-1].get("role") == "user"
+                and history[-1].get("content") == user_input
+            ):
+                # Orchestrator 会先把当前输入写入历史；避免在路由数据中重复两次。
+                context_messages = history[:-1]
             recent = [
-                m for m in history[-4:]
+                m for m in context_messages[-4:]
                 if m.get("role") in ("user", "assistant")
             ]
             if recent:
@@ -33,15 +40,20 @@ class Router:
                     if content and len(content) < 200:
                         lines.append(f"{role}: {content}")
                 if lines:
-                    recent_context = "\n最近对话：\n" + "\n".join(lines) + "\n"
+                    recent_context = "【最近对话】\n" + "\n".join(lines) + "\n\n"
 
-        prompt = ROUTER_PROMPT.format(user_input=user_input)
-        if recent_context:
-            prompt = recent_context + "\n" + prompt
+        routing_data = (
+            f"{recent_context}"
+            f"【当前用户消息】\n{user_input}\n\n"
+            "请输出分类结果。"
+        )
 
         response = self.client.chat.completions.create(
             model=self.model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[
+                {"role": "system", "content": ROUTER_PROMPT},
+                {"role": "user", "content": routing_data},
+            ],
             temperature=0.0,
             max_tokens=10,
         )
