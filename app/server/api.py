@@ -15,6 +15,7 @@ from openai import (
 )
 from pydantic import BaseModel, Field, field_validator
 
+from app.agent.context_budget import ContextWindowExceeded
 from app.config.settings import settings
 from app.schemas.response import CustomerServiceResponse
 from app.server.middleware import (
@@ -100,6 +101,8 @@ async def chat(payload: ChatRequest):
             detail=str(e),
             headers={"Retry-After": "1"},
         ) from e
+    except ContextWindowExceeded as e:
+        raise HTTPException(status_code=413, detail=str(e)) from e
     except AuthenticationError as e:
         logger.warning("模型服务鉴权失败 request_id=%s", request_id_var.get())
         raise HTTPException(

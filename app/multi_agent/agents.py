@@ -7,6 +7,7 @@ import json
 
 from openai import OpenAI
 
+from app.agent.context_budget import ContextBudgetManager
 from app.prompts.agents import COMPLAINT_PROMPT, POSTSALE_PROMPT, PRESALE_PROMPT
 from app.agent.tools.manager import ToolManager
 
@@ -44,6 +45,7 @@ class SubAgent:
         client: OpenAI,
         model: str,
         temperature: float,
+        context_budget: ContextBudgetManager,
     ):
         self.name = name
         self.system_prompt = system_prompt
@@ -51,6 +53,7 @@ class SubAgent:
         self.client = client
         self.model = model
         self.temperature = temperature
+        self.context_budget = context_budget
 
     def handle(
         self, messages: list[dict], max_steps: int = 5,
@@ -60,11 +63,15 @@ class SubAgent:
         working = list(messages)
 
         for _ in range(max_steps):
+            self.context_budget.ensure_within_budget(
+                working, self.tool_manager.tool_definitions
+            )
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=working,
                 temperature=self.temperature,
                 tools=self.tool_manager.tool_definitions,
+                max_tokens=self.context_budget.reserved_output_tokens,
             )
             assistant_msg = response.choices[0].message
 
@@ -108,10 +115,12 @@ class SubAgent:
                 new_messages.append(tool_msg)
                 working.append(tool_msg)
 
+        self.context_budget.ensure_within_budget(working)
         response = self.client.chat.completions.create(
             model=self.model,
             messages=working,
             temperature=self.temperature,
+            max_tokens=self.context_budget.reserved_output_tokens,
         )
         content = response.choices[0].message.content or ""
         new_messages.append({"role": "assistant", "content": content})
