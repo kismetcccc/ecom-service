@@ -1,6 +1,7 @@
 import json
 from typing import Optional
 
+from app.agent.context_budget import ContextBudgetManager, ContextWindowExceeded
 from app.agent.storage import delete_session, load_session, save_session
 from app.agent.summarizer import summarize
 from app.config.openai_client import create_openai_client
@@ -29,6 +30,11 @@ class EcomAgent:
         self.history_threshold = settings.history_threshold
         self.history_keep_recent = settings.history_keep_recent
         self.max_react_steps = settings.max_react_steps
+        self.context_budget = ContextBudgetManager(
+            window_tokens=settings.context_window_tokens,
+            reserved_output_tokens=settings.context_reserved_output_tokens,
+            keep_recent_messages=settings.context_keep_recent_messages,
+        )
 
         from app.agent.memory import MemoryManager
         self.memory_manager = MemoryManager(
@@ -81,9 +87,15 @@ class EcomAgent:
 
     def chat(self, user_input: str) -> CustomerServiceResponse:
         """处理用户输入：ReAct 循环 → 结构化提取 → 返回结果"""
+        turn_start = len(self.raw_messages)
         self.raw_messages.append({"role": "user", "content": user_input})
 
-        final_text = self._react_loop()
+        try:
+            final_text = self._react_loop()
+        except ContextWindowExceeded:
+            # A rejected request must not pollute the persisted conversation.
+            del self.raw_messages[turn_start:]
+            raise
 
         result = self._extract_structured_response(user_input, final_text)
 
@@ -121,13 +133,14 @@ class EcomAgent:
     def _react_loop(self) -> str:
         """ReAct 循环：调用 LLM → 执行工具 → 观察结果 → 重复，直到模型给出最终回答。"""
         for step in range(self.max_react_steps):
-            messages = self._build_messages()
+            messages = self._prepare_messages()
 
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 temperature=self.temperature,
                 tools=self.tool_manager.tool_definitions,
+                max_tokens=self.context_budget.reserved_output_tokens,
             )
             choice = response.choices[0]
             assistant_msg = choice.message
@@ -168,11 +181,12 @@ class EcomAgent:
                     "content": result_str,
                 })
 
-        messages = self._build_messages()
+        messages = self._prepare_messages()
         response = self.client.chat.completions.create(
             model=self.model,
             messages=messages,
             temperature=self.temperature,
+            max_tokens=self.context_budget.reserved_output_tokens,
         )
         content = response.choices[0].message.content or ""
         self.raw_messages.append({"role": "assistant", "content": content})
@@ -265,15 +279,48 @@ class EcomAgent:
         messages.extend(self.raw_messages)
         return messages
 
+    def _prepare_messages(self) -> list[dict]:
+        """Build input and compact old history before it exceeds the budget."""
+        tools = self.tool_manager.tool_definitions
+        messages = self._build_messages()
+        before = self.context_budget.estimate(messages, tools)
+        if before <= self.context_budget.input_budget:
+            return messages
+
+        old_messages, recent = self.context_budget.split_history(
+            self.raw_messages
+        )
+        if not old_messages:
+            raise ContextWindowExceeded(
+                before, self.context_budget.input_budget
+            )
+
+        self._summarize_history(old_messages, recent)
+        messages = self._build_messages()
+        after = self.context_budget.ensure_within_budget(messages, tools)
+        print(
+            "\n📏 [上下文压缩] "
+            f"{before} → {after} tokens，预算 "
+            f"{self.context_budget.input_budget} tokens\n"
+        )
+        return messages
+
     def _compress_history(self) -> None:
-        keep = self.history_keep_recent
-        split = len(self.raw_messages) - keep
-        while split > 0 and self.raw_messages[split].get("role") in ("tool",):
-            split -= 1
-        if split <= 0:
+        old_messages, recent = self.context_budget.split_history(
+            self.raw_messages,
+            keep_recent_messages=self.history_keep_recent,
+        )
+        if not old_messages:
             return
-        old_messages = self.raw_messages[:split]
-        recent = self.raw_messages[split:]
+
+        self._summarize_history(old_messages, recent)
+
+    def _summarize_history(
+        self,
+        old_messages: list[dict],
+        recent: list[dict],
+    ) -> None:
+        """Summarize a history prefix and atomically replace conversation state."""
 
         new_summary = summarize(
             client=self.client,

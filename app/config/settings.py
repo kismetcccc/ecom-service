@@ -1,3 +1,4 @@
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -54,8 +55,13 @@ class Settings(BaseSettings):
 
     # 多轮对话管理
     session_path: str = "app/sessions/session.json"
-    history_threshold: int = 10  # 消息压缩策略通常为上下文达到一定的token数，例如claude code通常为达到最大上下文窗口的70%左右，此处简略为原始消息条数超过10轮
-    history_keep_recent: int = 3  # 压缩时保留最近 3 条原始消息
+    # Legacy message-count compaction remains as a secondary cleanup trigger.
+    history_threshold: int = 10
+    history_keep_recent: int = 3
+    # Primary preflight budget: effective input = window - reserved output.
+    context_window_tokens: int = 28000
+    context_reserved_output_tokens: int = 4000
+    context_keep_recent_messages: int = 6
 
     # 并发 HTTP 服务
     server_host: str = "0.0.0.0"
@@ -69,6 +75,20 @@ class Settings(BaseSettings):
         "env_file": ".env",
         "protected_namespaces": ("settings_",),
     }
+
+    @model_validator(mode="after")
+    def validate_context_budget(self):
+        if self.context_window_tokens <= 0:
+            raise ValueError("CONTEXT_WINDOW_TOKENS 必须大于 0")
+        if self.context_reserved_output_tokens <= 0:
+            raise ValueError("CONTEXT_RESERVED_OUTPUT_TOKENS 必须大于 0")
+        if self.context_reserved_output_tokens >= self.context_window_tokens:
+            raise ValueError(
+                "CONTEXT_RESERVED_OUTPUT_TOKENS 必须小于 CONTEXT_WINDOW_TOKENS"
+            )
+        if self.context_keep_recent_messages <= 0:
+            raise ValueError("CONTEXT_KEEP_RECENT_MESSAGES 必须大于 0")
+        return self
 
 
 settings = Settings()

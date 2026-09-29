@@ -49,6 +49,23 @@ python main.py
 - `MCP_ENABLED=true` —— 通过 MCP 协议调用工具（需另起 `python mcp_server/server.py`）
 - `RAG_BACKEND=chroma` —— 换用 Chroma 向量数据库（需 `pip install chromadb`）
 
+**上下文预算**（可选，默认输入预算为 `28000 - 4000 = 24000`）：
+
+```env
+# 模型总上下文窗口预算（输入 + 预留输出）
+CONTEXT_WINDOW_TOKENS=28000
+# 为本轮模型回答预留的 token
+CONTEXT_RESERVED_OUTPUT_TOKENS=4000
+# 自动压缩时至少保留的最近原始消息数
+CONTEXT_KEEP_RECENT_MESSAGES=6
+```
+
+系统会在每次主要模型调用前保守估算 System Prompt、记忆、摘要、历史消息和
+工具 Schema 的总 Token。超过输入预算时，会先压缩最早的历史并重新校验；如果
+System Prompt、最近消息或单条输入本身仍无法放入预算，则拒绝请求，HTTP API 返回
+`413`。估算器面向不同 OpenAI-compatible 提供商，采用偏保守的通用算法，因此该值
+是安全预算而不是供应商账单中的精确 Token 数。
+
 **跑评估 & 测试**：
 
 ```bash
@@ -118,6 +135,7 @@ Kubernetes 的 3 副本 Deployment、Service 和 HPA 示例位于 `deploy/k8s.ya
 | Skill 工作流 | 按需加载退货、订单跟踪和商品推荐等标准操作流程，避免系统提示无限膨胀 |
 | MCP 集成 | 可连接独立 MCP 工具服务，也能在连接失败时回退到本地工具 |
 | 多用户并发 | FastAPI 异步入口、工作线程执行、用户级锁、会话池、并发限制和 503 背压 |
+| 上下文预算 | 模型调用前估算 Token，超限时保持工具消息完整并自动压缩旧历史 |
 | 评估体系 | 支持黄金测试集、过程轨迹、规则指标以及可选的 LLM-as-Judge |
 | 容器部署 | 提供 Dockerfile，以及带健康检查、Service 和 HPA 的 Kubernetes 示例 |
 
@@ -147,6 +165,7 @@ CLI / HTTP 客户端
 - **业务能力与模型解耦**：订单、物流、退款等确定性操作由工具执行，大模型负责理解、规划和组织语言。
 - **用户状态隔离**：会话文件、短期记忆、长期记忆和工具上下文均按用户绑定，避免并发请求串数据。
 - **渐进式加载上下文**：知识通过 RAG 检索，流程通过 Skill 按需加载，减少无关提示内容和 token 消耗。
+- **有界上下文**：调用模型前统一计算输入预算，优先摘要旧历史，并为模型输出保留固定空间。
 - **同步能力异步接入**：现有同步 Agent 通过工作线程执行，避免阻塞 FastAPI 事件循环。
 - **过载时快速失败**：达到并发上限后请求进入有限等待，超时返回 `503 Retry-After`，防止服务被无限请求拖垮。
 - **部署方式可扩展**：本地可运行单进程服务，容器环境可通过 Kubernetes 副本和 HPA 扩展吞吐量。
@@ -177,6 +196,7 @@ ecom-service-agent/
 │   │   └── response.py            # 结构化输出 schema（Pydantic）
 │   ├── agent/                     # Agent 核心、工具、知识库、记忆与技能
 │   │   ├── chat.py                # 核心 ReAct 循环（集成 MemoryManager + SkillManager）
+│   │   ├── context_budget.py      # Provider-neutral Token 估算、预算校验与安全分段
 │   │   ├── summarizer.py          # LLM 自我压缩老对话（支持工具消息）
 │   │   ├── storage.py             # 会话 JSON 持久化（含短期记忆）
 │   │   ├── memory/                # 短期与长期记忆系统

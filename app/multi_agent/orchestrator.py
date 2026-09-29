@@ -5,6 +5,7 @@
 
 from typing import Optional
 
+from app.agent.context_budget import ContextBudgetManager, ContextWindowExceeded
 from app.agent.storage import delete_session, load_session, save_session
 from app.agent.summarizer import summarize
 from app.config.openai_client import create_openai_client
@@ -34,6 +35,11 @@ class MultiAgentOrchestrator:
         self.history_threshold = settings.history_threshold
         self.history_keep_recent = settings.history_keep_recent
         self.max_react_steps = settings.max_react_steps
+        self.context_budget = ContextBudgetManager(
+            window_tokens=settings.context_window_tokens,
+            reserved_output_tokens=settings.context_reserved_output_tokens,
+            keep_recent_messages=settings.context_keep_recent_messages,
+        )
 
         from app.agent.memory import MemoryManager
         self.memory_manager = MemoryManager(
@@ -82,6 +88,7 @@ class MultiAgentOrchestrator:
                 client=self.client,
                 model=self.model,
                 temperature=self.temperature,
+                context_budget=self.context_budget,
             )
 
         self.raw_messages: list[dict] = []
@@ -100,16 +107,21 @@ class MultiAgentOrchestrator:
 
     def chat(self, user_input: str) -> CustomerServiceResponse:
         """路由 → 子 Agent 执行 → 结构化提取 → 返回结果。"""
+        turn_start = len(self.raw_messages)
         self.raw_messages.append({"role": "user", "content": user_input})
 
-        agent_key = self.router.route(user_input, self.raw_messages)
-        agent = self.agents[agent_key]
-        print(f"\n🔀 [路由] → {agent.name}")
+        try:
+            agent_key = self.router.route(user_input, self.raw_messages)
+            agent = self.agents[agent_key]
+            print(f"\n🔀 [路由] → {agent.name}")
 
-        messages = self._build_messages(agent)
-        final_text, new_messages = agent.handle(
-            messages, max_steps=self.max_react_steps,
-        )
+            messages = self._prepare_messages(agent)
+            final_text, new_messages = agent.handle(
+                messages, max_steps=self.max_react_steps,
+            )
+        except ContextWindowExceeded:
+            del self.raw_messages[turn_start:]
+            raise
         self.raw_messages.extend(new_messages)
 
         result = self._extract_structured_response(user_input, final_text)
@@ -166,6 +178,32 @@ class MultiAgentOrchestrator:
                 ),
             })
         messages.extend(self.raw_messages)
+        return messages
+
+    def _prepare_messages(self, agent: SubAgent) -> list[dict]:
+        """Build input and compact old history before dispatching a sub-agent."""
+        tools = agent.tool_manager.tool_definitions
+        messages = self._build_messages(agent)
+        before = self.context_budget.estimate(messages, tools)
+        if before <= self.context_budget.input_budget:
+            return messages
+
+        old_messages, recent = self.context_budget.split_history(
+            self.raw_messages
+        )
+        if not old_messages:
+            raise ContextWindowExceeded(
+                before, self.context_budget.input_budget
+            )
+
+        self._summarize_history(old_messages, recent)
+        messages = self._build_messages(agent)
+        after = self.context_budget.ensure_within_budget(messages, tools)
+        print(
+            "\n📏 [上下文压缩] "
+            f"{before} → {after} tokens，预算 "
+            f"{self.context_budget.input_budget} tokens\n"
+        )
         return messages
 
     def _extract_structured_response(
@@ -230,14 +268,21 @@ class MultiAgentOrchestrator:
         return result
 
     def _compress_history(self) -> None:
-        keep = self.history_keep_recent
-        split = len(self.raw_messages) - keep
-        while split > 0 and self.raw_messages[split].get("role") in ("tool",):
-            split -= 1
-        if split <= 0:
+        old_messages, recent = self.context_budget.split_history(
+            self.raw_messages,
+            keep_recent_messages=self.history_keep_recent,
+        )
+        if not old_messages:
             return
-        old_messages = self.raw_messages[:split]
-        recent = self.raw_messages[split:]
+
+        self._summarize_history(old_messages, recent)
+
+    def _summarize_history(
+        self,
+        old_messages: list[dict],
+        recent: list[dict],
+    ) -> None:
+        """Summarize a history prefix and atomically replace conversation state."""
 
         new_summary = summarize(
             client=self.client,
