@@ -1,0 +1,1510 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>小飞 · 智能客服</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: rgba(255, 255, 255, .92);
+      --panel-solid: #fff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #e5e9f2;
+      --brand: #e94f37;
+      --brand-dark: #c93724;
+      --brand-soft: #fff0ec;
+      --accent: #6750d8;
+      --success: #16845b;
+      --danger: #c43232;
+      --shadow: 0 18px 50px rgba(31, 41, 70, .10);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(233, 79, 55, .10), transparent 30%),
+        radial-gradient(circle at 100% 100%, rgba(103, 80, 216, .10), transparent 34%),
+        var(--bg);
+    }
+    button, input, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 3px solid rgba(103, 80, 216, .22);
+      outline-offset: 2px;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      padding: 24px 20px;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      display: grid;
+      width: 44px;
+      height: 44px;
+      place-items: center;
+      border-radius: 14px;
+      color: white;
+      font-size: 22px;
+      background: linear-gradient(135deg, var(--brand), #ff8a5c);
+      box-shadow: 0 10px 24px rgba(233, 79, 55, .24);
+    }
+    .brand h1 { margin: 0; font-size: 18px; }
+    .brand p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+
+    .identity-card, .tip-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--panel-solid);
+      box-shadow: 0 8px 24px rgba(31, 41, 70, .05);
+    }
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 14px;
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; margin-bottom: 6px; color: var(--muted); font-size: 12px; }
+    .field input {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text);
+      background: #fbfcfe;
+    }
+    .field input:focus { border-color: var(--accent); background: white; }
+    .btn-primary {
+      width: 100%;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 10px;
+      color: white;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+    }
+    .btn-primary:hover { filter: brightness(.97); transform: translateY(-1px); }
+
+    .tools { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .tool-btn {
+      padding: 10px 8px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--text);
+      background: white;
+    }
+    .tool-btn:hover { border-color: #cfc7f4; background: #faf9ff; }
+    .tool-btn.danger { color: var(--danger); }
+    .tip-card { margin-top: auto; color: var(--muted); font-size: 12px; line-height: 1.65; }
+    .tip-card strong { color: var(--text); }
+
+    .workspace { min-width: 0; display: flex; flex-direction: column; height: 100vh; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 74px;
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, .72);
+      backdrop-filter: blur(16px);
+    }
+    .session-title { min-width: 0; }
+    .session-title h2 { margin: 0; font-size: 16px; }
+    .session-title p {
+      overflow: hidden;
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .status { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #aab2c0; }
+    .status.online .status-dot { background: var(--success); box-shadow: 0 0 0 4px rgba(22,132,91,.10); }
+    .status.offline .status-dot { background: var(--danger); }
+
+    .chat-scroll { flex: 1; overflow-y: auto; padding: 28px; scroll-behavior: smooth; }
+    .chat { width: min(900px, 100%); margin: 0 auto; }
+    .welcome {
+      padding: 42px 24px 28px;
+      text-align: center;
+    }
+    .welcome-icon {
+      display: grid;
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 18px;
+      place-items: center;
+      border-radius: 22px;
+      color: white;
+      font-size: 30px;
+      background: linear-gradient(145deg, var(--brand), #ff9b69);
+      box-shadow: 0 14px 34px rgba(233,79,55,.22);
+    }
+    .welcome h3 { margin: 0 0 10px; font-size: 24px; }
+    .welcome p { margin: 0 auto; max-width: 580px; color: var(--muted); line-height: 1.7; }
+    .suggestions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 26px; }
+    .suggestion {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: var(--text);
+      text-align: left;
+      background: rgba(255,255,255,.82);
+    }
+    .suggestion:hover { border-color: #efb4a9; background: var(--brand-soft); transform: translateY(-2px); }
+    .suggestion span { display: block; margin-bottom: 7px; font-size: 20px; }
+    .suggestion small { color: var(--muted); line-height: 1.45; }
+
+    .message { display: flex; gap: 11px; margin: 20px 0; animation: rise .22s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(7px); } }
+    .message.user { justify-content: flex-end; }
+    .avatar {
+      display: grid;
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 11px;
+      background: var(--brand-soft);
+    }
+    .message.user .avatar { order: 2; color: white; background: var(--accent); }
+    .message-body { max-width: min(700px, 78%); }
+    .bubble {
+      padding: 13px 15px;
+      border: 1px solid var(--line);
+      border-radius: 6px 16px 16px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: white;
+      box-shadow: 0 5px 16px rgba(31,41,70,.05);
+    }
+    .message.user .bubble { border: 0; border-radius: 16px 6px 16px 16px; color: white; background: var(--accent); }
+    .meta { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 7px; color: var(--muted); font-size: 11px; }
+    .chip { padding: 3px 7px; border: 1px solid var(--line); border-radius: 999px; background: white; }
+    .follow-up { margin-top: 9px; padding: 9px 11px; border-left: 3px solid var(--brand); color: var(--muted); background: var(--brand-soft); font-size: 12px; }
+    .typing .bubble { color: var(--muted); }
+    .dots::after { content: ""; animation: dots 1.2s steps(4,end) infinite; }
+    @keyframes dots { 0%{content:""} 25%{content:"."} 50%{content:".."} 75%,100%{content:"..."} }
+
+    .composer-wrap { padding: 14px 28px 22px; background: linear-gradient(transparent, rgba(245,247,251,.96) 26%); }
+    .composer {
+      display: flex;
+      width: min(900px, 100%);
+      margin: 0 auto;
+      padding: 9px;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+    .composer textarea {
+      flex: 1;
+      min-height: 48px;
+      max-height: 140px;
+      resize: none;
+      padding: 12px;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      background: transparent;
+    }
+    .send-btn {
+      align-self: flex-end;
+      width: 48px;
+      height: 48px;
+      border: 0;
+      border-radius: 13px;
+      color: white;
+      font-size: 19px;
+      background: var(--brand);
+    }
+    .send-btn:disabled { cursor: not-allowed; opacity: .48; }
+    .composer-note { width: min(900px, 100%); margin: 7px auto 0; color: var(--muted); text-align: center; font-size: 11px; }
+
+    dialog {
+      width: min(620px, calc(100vw - 28px));
+      max-height: 78vh;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      color: var(--text);
+      background: white;
+      box-shadow: 0 28px 90px rgba(19,28,51,.22);
+    }
+    dialog::backdrop { background: rgba(17,24,39,.34); backdrop-filter: blur(3px); }
+    .dialog-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .dialog-head h3 { margin: 0; font-size: 16px; }
+    .dialog-close { border: 0; color: var(--muted); font-size: 22px; background: transparent; }
+    .dialog-body { max-height: calc(78vh - 64px); overflow: auto; padding: 18px 20px 22px; }
+    .data-section { margin-bottom: 20px; }
+    .data-section:last-child { margin-bottom: 0; }
+    .data-section h4 { margin: 0 0 9px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+    .data-item { margin: 7px 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; line-height: 1.55; background: #fbfcfe; }
+    .empty { color: var(--muted); font-size: 13px; }
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 10; max-width: 360px; padding: 12px 15px; border-radius: 11px; color: white; background: #283044; box-shadow: var(--shadow); animation: rise .2s ease; }
+
+    @media (max-width: 800px) {
+      .app { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .workspace { height: 100dvh; }
+      .topbar { padding: 13px 16px; }
+      .chat-scroll { padding: 18px 14px; }
+      .composer-wrap { padding: 10px 12px 14px; }
+      .suggestions { grid-template-columns: 1fr; }
+      .message-body { max-width: 86%; }
+    }
+    /* 2026-10-11: compact workspace, readable evidence, accessible mobile account. */
+    :root { --bg:#f4f6f5; --brand:#167366; --brand-dark:#105b51; --brand-soft:#eaf4ef; --accent:#246d62; --text:#233b37; --muted:#6b7d78; --line:#dfe7e3; }
+    body { background:var(--bg); font-family:Inter,"Segoe UI","Microsoft YaHei",sans-serif; }
+    .app { grid-template-columns:280px minmax(0,1fr); height:100dvh; min-height:0; }
+    .sidebar { height:100dvh; overflow-y:auto; gap:20px; padding:26px 18px; background:#edf2ef; backdrop-filter:none; }
+    .brand { padding:0 6px 14px; border-bottom:1px solid #d9e3dc; }
+    .logo { background:#205e51; box-shadow:none; border-radius:13px; }
+    .brand h1 { font-size:16px; letter-spacing:.03em; }
+    .identity-card { box-shadow:none; padding:15px; border-radius:14px; }
+    .identity-card .tool-btn { margin-top:8px; font-size:12px; }
+    .card-title { color:#3d5951; letter-spacing:.03em; }
+    .btn-primary { background:#216d5c; font-size:13px; }
+    .tool-btn { font-size:12px; text-decoration:none; text-align:center; transition:background .15s; }
+    .tool-btn:hover { border-color:#9dbbb0; background:#edf5f0; }
+    .tool-group summary { cursor:pointer; padding:5px 2px 14px; font-size:13px; font-weight:650; }
+    .tip-card { box-shadow:none; background:transparent; border:0; padding:2px 8px; }
+    .workspace { height:100dvh; }
+    .topbar { min-height:84px; background:#fafcfb; padding:18px 36px; backdrop-filter:none; }
+    .session-title h2 { font-size:17px; }
+    .status { border:1px solid var(--line); padding:8px 12px; border-radius:20px; background:white; }
+    .chat-scroll { padding:28px 36px; }
+    .chat { max-width:960px; }
+    .welcome { text-align:left; padding:56px 12px 28px; }
+    .welcome-icon { margin:0 0 25px; width:52px; height:52px; font-size:24px; border-radius:16px; box-shadow:none; background:#e0ebe5; color:#215e4e; }
+    .eyebrow { color:#688178; font-size:11px; letter-spacing:.18em; margin-bottom:14px; font-weight:650; }
+    .welcome h3 { font-size:clamp(27px,3.2vw,42px); letter-spacing:-.04em; font-weight:650; margin-bottom:16px; }
+    .welcome p { margin:0; max-width:520px; font-size:14px; }
+    .suggestions { margin-top:36px; gap:14px; }
+    .suggestion { position:relative; min-height:146px; padding:20px; background:#fff; border-radius:16px; font-size:14px; transition:transform .15s,border-color .15s; }
+    .suggestion::after { content:'↗'; position:absolute; top:18px; right:18px; color:#8aa197; }
+    .suggestion:hover { border-color:#8aad9c; background:#fafffc; }
+    .suggestion span { font-size:22px; margin-bottom:20px; }
+    .suggestion small { display:block; margin-top:8px; font-size:12px; }
+    .message { margin:24px 0; gap:12px; }
+    .message-body { max-width:min(760px,88%); min-width:0; }
+    .bubble { padding:18px 22px; font-size:14px; line-height:1.85; box-shadow:0 3px 10px #163b2c04; }
+    .message.user .bubble { background:#28695c; padding:13px 19px; }
+    .message.user .avatar { background:#dce9e2; color:#24604d; }
+    .chip { display:inline-flex; align-items:center; width:fit-content; max-width:100%; font-size:11px; line-height:1.6; padding:3px 9px; margin:4px 4px 0 0; border-radius:7px; color:#61766d; background:#f9fbfa; }
+    .meta { gap:2px; margin-top:8px; }
+    .follow-up { border-radius:0 8px 8px 0; padding:12px 15px; line-height:1.8; background:#eef4ef; border-left-color:#8eafa0; }
+    details.sources { margin-top:12px; border:1px solid var(--line); border-radius:10px; background:#fff; padding:12px 15px; font-size:12px; color:var(--muted); }
+    details.sources summary { cursor:pointer; color:#4b6b5e; font-weight:600; }
+    details.sources > div { border-top:1px solid #edf1ee; padding:9px 0; line-height:1.7; }
+    details.sources a { color:#276e5e; overflow-wrap:anywhere; }
+    .composer-wrap { padding:14px 36px 24px; background:var(--bg); }
+    .composer { max-width:960px; padding:12px; border-radius:18px; box-shadow:0 6px 24px #193d2a08; }
+    .composer textarea { font-size:14px; }
+    .send-btn { background:#216d5c; border-radius:12px; }
+    .composer-note { color:#8a9991; font-size:11px; margin-top:12px; }
+    .mobile-account { display:none; }
+    @media (min-width:1400px) { .welcome { padding-top:80px; } }
+    @media (max-width:800px) {
+      .app { display:block; }
+      .sidebar { display:none; position:fixed; inset:0 auto 0 0; width:min(320px,88vw); z-index:20; box-shadow:8px 0 40px #142f3926; }
+      body.account-open .sidebar { display:flex; }
+      .mobile-account { display:inline-block; padding:8px; border:1px solid var(--line); border-radius:8px; background:white; color:var(--text); }
+      .topbar { padding:12px 16px; gap:10px; }
+      .status { padding:6px 8px; font-size:11px; }
+      .chat-scroll { padding:16px; }
+      .welcome { padding:28px 0; }
+      .suggestions { grid-template-columns:1fr; margin-top:24px; gap:10px; }
+      .suggestion { min-height:94px; padding:14px 18px 14px 64px; }
+      .suggestion span { position:absolute; left:20px; top:22px; }
+      .composer-wrap { padding:10px 14px 18px; }
+      .bubble { padding:13px 15px; }
+    }
+    @media (prefers-reduced-motion:reduce) { *,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+    .shop-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:18px; }
+    .shop-card { border:1px solid #dce8e4; border-radius:16px; padding:20px; background:#fff; display:flex; flex-direction:column; gap:12px; }
+    .shop-card h4 { margin:0; font-size:17px; }
+    .shop-card p { margin:0; line-height:1.6; }
+    .shop-price { font-size:23px; font-weight:700; color:#256b5d; }
+    .shop-muted { color:#657b74; font-size:13px; }
+    .shop-search { display:flex; gap:10px; flex-wrap:wrap; }
+    .shop-search input { flex:1; min-width:150px; }
+    .shop-input { padding:10px; border:1px solid #bfd3cb; border-radius:8px; font:inherit; }
+    .shop-notice { padding:14px; background:#edf5f1; border-radius:12px; margin-bottom:16px; line-height:1.6; }
+    .shop-card button { margin-top:auto; }
+    .shopping-nav { display:flex; gap:10px; padding:10px 28px; border-bottom:1px solid #dce8e4; background:#f6faf8; }
+    /* Quiet, editorial workspace: neutral surfaces and a single ink accent. */
+    :root { --bg:#faf9f6; --panel:#f1f0ec; --text:#252521; --muted:#73736b; --line:#e4e3dc; --brand:#292a25; --brand-dark:#11120f; --brand-soft:#efeee8; --accent:#34352e; --shadow:0 8px 32px #24251a08; }
+    body { background:var(--bg); font-family:Inter,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing:antialiased; }
+    button, a, input, textarea { -webkit-tap-highlight-color:transparent; }
+    button { transition:background .18s,border-color .18s,transform .18s; }
+    button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible { outline:2px solid #656c4e; outline-offset:4px; }
+    .app { grid-template-columns:260px minmax(0,1fr); }
+    .sidebar { background:#f0efea; border-right:1px solid var(--line); padding:28px 18px 20px; gap:18px; scrollbar-width:thin; }
+    .brand { gap:10px; padding:0 4px 22px; border-color:var(--line); }
+    .logo { width:36px; height:36px; border-radius:11px; background:#2c2d27; font-size:19px; }
+    .brand h1 { font-size:15px; letter-spacing:-.02em; font-weight:650; }
+    .brand p { font-size:11px; margin-top:5px; }
+    .identity-card { padding:15px; background:#f8f7f3; border-color:#e2e1d9; border-radius:12px; }
+    .card-title { color:#44453d; font-weight:600; letter-spacing:0; font-size:12px; }
+    .card-title > span:last-child { color:#898a7c; filter:grayscale(1); }
+    .field label { font-size:11px; color:#74756c; }
+    .field input { background:#fffefa; border-color:#deded5; border-radius:7px; padding:9px 10px; font-size:12px; }
+    .btn-primary { background:var(--brand); border-radius:8px; font-weight:500; }
+    .tool-btn { background:#fffefa; border-color:var(--line); border-radius:8px; color:#4a4b43; font-weight:450; }
+    .tool-btn:hover { background:#eae9e1; border-color:#c9cabe; }
+    .tool-group summary { color:#53544b; font-size:12px; font-weight:500; padding:7px 2px 12px; }
+    .tip-card { font-size:10px; color:#818277; line-height:1.8; padding:12px 4px 0; border-top:1px solid var(--line); border-radius:0; }
+    .tip-card strong { color:#64655b; font-weight:500; }
+    .workspace { min-width:0; background:var(--bg); }
+    .topbar { min-height:76px; padding:18px 36px; background:var(--bg); border-bottom:0; }
+    .session-title h2 { font-size:14px; font-weight:500; letter-spacing:.02em; }
+    .session-title p { font-size:11px; color:#929287; }
+    .status { background:transparent; border:0; font-size:11px; padding:6px 0; }
+    .status-dot { width:6px; height:6px; }
+    .status.online .status-dot { box-shadow:none; background:#648268; }
+    .shopping-nav { background:transparent; padding:0 36px 16px; border-bottom:1px solid var(--line); gap:8px; }
+    .shopping-nav .tool-btn { background:transparent; border-color:#ddddd3; padding:8px 14px; border-radius:999px; font-size:11px; }
+    .shopping-nav .tool-btn:hover { background:#eeeee6; }
+    .chat-scroll { padding:20px 40px; scrollbar-width:thin; }
+    .chat { width:min(840px,100%); }
+    .welcome { padding:clamp(28px,7vh,78px) 0 30px; }
+    .welcome-icon { width:46px; height:46px; border:1px solid #d4d6c9; background:#eceee2; color:#555d40; border-radius:14px; margin-bottom:24px; transform:rotate(-6deg); font-size:23px; }
+    .eyebrow { color:#76796b; font-size:10px; letter-spacing:.16em; font-weight:500; margin-bottom:18px; }
+    .welcome h3 { font-size:clamp(28px,3.4vw,46px); line-height:1.35; font-weight:500; letter-spacing:-.055em; margin-bottom:18px; }
+    .welcome h3 em { font-style:normal; color:#8a8e7b; }
+    .welcome p { font-size:13px; line-height:1.9; color:#7e8074; max-width:470px; }
+    .suggestions { margin-top:38px; gap:12px; }
+    .suggestion { min-height:142px; padding:20px; border-radius:12px; background:#f4f3ed; border:1px solid #e5e5db; font-size:13px; font-weight:500; box-shadow:none; }
+    .suggestion:nth-child(2) { background:#efefe8; }
+    .suggestion:nth-child(3) { background:#f1f0eb; }
+    .suggestion:hover { transform:translateY(-3px); background:#e9ebdf; border-color:#bfc5ae; }
+    .suggestion::after { color:#878b7a; font-size:17px; top:17px; right:17px; }
+    .suggestion span { font-size:21px; color:#60674c; margin-bottom:24px; line-height:1; }
+    .suggestion small { font-size:11px; color:#808273; margin-top:9px; font-weight:400; }
+    .message { margin:25px 0; gap:12px; }
+    .avatar { width:30px; height:30px; flex-basis:30px; font-size:13px; background:#eeeee5; color:#656b50; border-radius:9px; }
+    .message-body { max-width:min(720px,88%); }
+    .bubble { background:#fffefa; border-color:#e6e5dd; border-radius:4px 16px 16px; padding:17px 21px; color:#393a33; box-shadow:none; line-height:1.9; }
+    .message.user .bubble { background:#e9eadf; color:#34382a; border-radius:16px 4px 16px 16px; }
+    .message.user .avatar { background:#e2e5d6; color:#5d6547; }
+    .chip { background:#f2f2eb; color:#767b69; border-color:#e3e5d9; font-size:10px; border-radius:5px; }
+    .follow-up { background:#f0f1e7; border-left-color:#a8b08e; color:#6c735f; }
+    details.sources { background:#fffefa; }
+    details.sources summary, details.sources a { color:#69754e; }
+    .composer-wrap { padding:16px 40px 22px; background:var(--bg); }
+    .composer { width:min(840px,100%); padding:13px 15px; border:1px solid #d9dace; border-radius:18px; background:#fffefa; box-shadow:0 5px 24px #33382306; align-items:flex-end; }
+    .composer:focus-within { border-color:#a1aa8c; box-shadow:0 0 0 3px #a1aa8c12; }
+    .composer textarea { min-width:0; padding:10px 5px; font-size:13px; min-height:48px; line-height:1.7; }
+    .composer textarea::placeholder { color:#96988b; }
+    .send-btn { width:36px; height:36px; flex-shrink:0; margin-bottom:5px; background:#30332a; border-radius:10px; font-size:23px; }
+    .send-btn:hover:not(:disabled) { background:#555e42; }
+    .composer-note { font-size:10px; color:#929588; margin-top:12px; }
+    dialog { border-radius:16px; background:#faf9f6; border-color:var(--line); }
+    .dialog-head { padding:20px 24px; }
+    .dialog-body { padding:22px 24px; }
+    .data-item,.shop-card { background:#fffefa; border-color:var(--line); border-radius:12px; }
+    .shop-price { color:#555f41; }
+    .shop-muted { color:var(--muted); }
+    .shop-notice { background:#eeefe4; }
+    .shop-input { border-color:#d6dacb; background:#fffefa; }
+    .toast { background:#363a2d; }
+    @media (max-width:1100px) and (min-width:801px) {
+      .app { grid-template-columns:230px minmax(0,1fr); }
+      .sidebar { padding:24px 14px; }
+      .chat-scroll { padding:20px 28px; }
+      .composer-wrap { padding:12px 28px 20px; }
+      .suggestion { padding:16px; }
+    }
+    @media (max-width:800px) {
+      .app { display:block; }
+      .topbar { min-height:68px; padding:12px 18px; }
+      .mobile-account { border-color:#dcded1; background:#f4f4ec; font-size:11px; }
+      .shopping-nav { padding:0 18px 12px; }
+      .chat-scroll { padding:16px 22px; }
+      .welcome { padding:30px 0 16px; }
+      .welcome h3 { font-size:32px; }
+      .welcome-icon { margin-bottom:22px; }
+      .suggestions { margin-top:25px; gap:9px; }
+      .suggestion { min-height:84px; padding:17px 36px 17px 58px; }
+      .suggestion span { left:20px; top:25px; margin:0; }
+      .suggestion::after { top:25px; }
+      .composer-wrap { padding:10px 16px max(14px,env(safe-area-inset-bottom)); }
+      .composer { padding:9px 11px; border-radius:15px; }
+      .composer-note { font-size:9px; }
+      .bubble { padding:13px 15px; }
+      .message-body { max-width:calc(100% - 42px); }
+      .status { max-width:38%; overflow:hidden; white-space:nowrap; font-size:10px; }
+    }
+    /* Sidebar navigation: primary actions first, settings on demand. */
+    .sidebar { gap:0; padding:26px 14px 16px; background:#f3f2ee; }
+    .sidebar .brand { margin:0 8px 20px; padding:0 0 22px; }
+    .sidebar-nav { display:flex; flex-direction:column; gap:4px; }
+    .nav-caption { padding:17px 13px 9px; font-size:10px; letter-spacing:.1em; color:#96978d; }
+    .nav-caption:first-child { padding-top:0; }
+    .sidebar-nav > .tool-btn,.nav-current { display:flex; align-items:center; gap:11px; width:100%; padding:11px 13px; margin:0; border:0; border-radius:8px; background:transparent; color:#5c5e53; font-size:12px; text-align:left; text-decoration:none; font-weight:450; min-height:42px; }
+    .sidebar-nav > .tool-btn:hover { background:#e9e9e1; color:#292d23; transform:none; }
+    .nav-current { background:#e3e6d9; color:#39412e; font-weight:600; }
+    .nav-icon { display:inline-grid; place-items:center; width:19px; flex:0 0 19px; font-size:19px; line-height:1; color:#7e8470; }
+    .nav-current .nav-icon { color:#566244; }
+    .nav-active-dot { margin-left:auto; width:5px; height:5px; border-radius:50%; background:#7f9062; }
+    .nav-external { margin-left:auto; color:#929787; font-size:13px; }
+    .nav-disclosure { margin-top:5px; }
+    .nav-disclosure > summary { cursor:pointer; padding:10px 13px; color:#838779; font-size:11px; }
+    .nav-subitems { margin:4px 10px 8px 21px; padding-left:12px; border-left:1px solid #dcded2; display:flex; flex-direction:column; gap:3px; }
+    .nav-subitems .tool-btn { border:0; background:transparent; text-align:left; font-size:11px; padding:9px 7px; }
+    .nav-subitems .tool-btn:hover { background:#e9e9e1; }
+    .sidebar-account { margin-top:auto; padding-top:28px; }
+    .account-settings { border-top:1px solid #e2e3da; }
+    .account-settings > summary { list-style:none; cursor:pointer; display:flex; align-items:center; gap:11px; font-size:12px; color:#5b6052; padding:15px 12px; border-radius:7px; }
+    .account-settings > summary::-webkit-details-marker { display:none; }
+    .account-settings > summary:hover { background:#ebebe3; }
+    .nav-chevron { margin-left:auto; color:#929786; }
+    .account-settings[open] .nav-chevron { transform:rotate(180deg); }
+    .account-fields { padding:10px 13px 18px; }
+    .account-fields .tool-btn { margin-top:8px; font-size:11px; padding:8px 10px; }
+    .sidebar .tip-card { margin-top:12px; padding:10px 12px 0; border:0; font-size:9px; }
+    .sidebar .mobile-account { margin-bottom:15px; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar">
+      <button class="mobile-account" type="button" onclick="document.body.classList.remove('account-open'); document.getElementById('account-toggle').setAttribute('aria-expanded','false')">关闭账户与工具 ×</button>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">飞</div>
+        <div><h1>并夕夕 · 小飞</h1><p>智能客服工作台</p></div>
+      </div>
+
+<nav class="sidebar-nav" aria-label="服务导航"><div class="nav-caption">工作空间</div><a class="nav-current" href="#message"><span class="nav-icon" aria-hidden="true">◌</span>客服对话<span class="nav-active-dot" aria-hidden="true"></span></a><button class="tool-btn" id="shop-btn" type="button"><span class="nav-icon" aria-hidden="true">▦</span>浏览商品</button><button class="tool-btn" id="orders-btn" type="button"><span class="nav-icon" aria-hidden="true">▤</span>我的订单</button><button class="tool-btn" id="refund-status-btn" type="button"><span class="nav-icon" aria-hidden="true">↩</span>查询退款进度</button><div class="nav-caption">助手能力</div><button class="tool-btn" id="memory-btn" type="button"><span class="nav-icon" aria-hidden="true">◷</span>查看记忆</button><button class="tool-btn" id="skills-btn" type="button"><span class="nav-icon" aria-hidden="true">✧</span>查看技能</button><a class="tool-btn" href="/quality" target="_blank" rel="noopener"><span class="nav-icon" aria-hidden="true">▥</span>量化指标评估<span class="nav-external" aria-hidden="true">↗</span></a><details class="nav-disclosure"><summary>记忆与隐私</summary><div class="nav-subitems"><button class="tool-btn" id="grant-memory-btn" type="button">授权长期记忆</button><button class="tool-btn danger" id="revoke-memory-btn" type="button">撤回长期记忆授权</button><button class="tool-btn" id="export-memory-btn" type="button">导出我的记忆</button><button class="tool-btn" id="memory-metrics-btn" type="button">Memory 指标</button><button class="tool-btn" id="summary-versions-btn" type="button">摘要版本</button><button class="tool-btn danger" id="clear-stm-btn" type="button">清空短期记忆</button><button class="tool-btn danger" id="delete-ltm-btn" type="button">删除长期记忆</button></div></details><details class="nav-disclosure"><summary>更多操作</summary><div class="nav-subitems"><button class="tool-btn" id="refund-btn" type="button">演示申请退款</button><button class="tool-btn danger" id="reset-btn" type="button">重置会话</button><button class="tool-btn" id="clear-btn" type="button">清空屏幕</button></div></details></nav><div class="sidebar-account">      <details class="account-settings"><summary><span class="nav-icon" aria-hidden="true">◉</span>账户与登录<span class="nav-chevron" aria-hidden="true">⌄</span></summary><div class="account-fields">
+        <h2 class="card-title" id="auth-title"><span>安全登录</span><span>🔐</span></h2>
+        <div class="field">
+          <label for="auth-user">用户名</label>
+          <input id="auth-user" value="user-a" maxlength="64" autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="auth-password">密码</label>
+          <input id="auth-password" type="password" minlength="8" maxlength="128" autocomplete="current-password">
+        </div>
+        <button class="btn-primary" id="login-btn" type="button">登录</button>
+        <button class="tool-btn" id="register-btn" type="button">注册</button>
+        <button class="tool-btn" id="logout-btn" type="button">退出登录</button>
+      </div></details>
+
+      <details class="account-settings"><summary><span class="nav-icon" aria-hidden="true">⚙</span>会话设置<span class="nav-chevron" aria-hidden="true">⌄</span></summary><div class="account-fields">
+        <h2 class="card-title" id="identity-title"><span>会话身份</span><span>⚙</span></h2>
+        <div class="field">
+          <label for="user-id">用户 ID</label>
+          <input id="user-id" value="user-a" maxlength="64" readonly aria-readonly="true">
+        </div>
+        <div class="field">
+          <label for="session-id">会话 ID</label>
+          <input id="session-id" value="default" maxlength="64" autocomplete="off">
+        </div>
+        <button class="btn-primary" id="connect-btn" type="button">连接会话</button>
+      </div></details>
+
+</div>
+      <div class="tip-card">
+        <strong>身份安全</strong><br>
+        用户身份由登录令牌确定，不能通过修改用户 ID 访问其他用户的会话或记忆。
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <button class="mobile-account" id="account-toggle" type="button" aria-expanded="false" onclick="document.body.classList.add('account-open'); this.setAttribute('aria-expanded','true')">账户</button>
+        <div class="session-title">
+          <h2>客服工作台</h2>
+          <p id="active-session">用户 user-a · 会话 default</p>
+        </div>
+        <div class="status" id="service-status" aria-live="polite">
+          <span class="status-dot"></span><span>检测中</span>
+        </div>
+      </header>
+
+      <nav class="shopping-nav" aria-label="购物服务">
+        <button class="tool-btn" id="browse-products-btn" type="button">浏览商品 · 去下单</button>
+        <button class="tool-btn" id="my-orders-btn" type="button">我的订单</button>
+      </nav>
+      <div class="chat-scroll" id="chat-scroll">
+        <div class="chat" id="chat" aria-live="polite">
+          <section class="welcome" id="welcome">
+            <div class="welcome-icon" aria-hidden="true">飞</div>
+            <div class="eyebrow">小飞 · 你的购物服务助手</div>
+            <h3>让购物的每一步，<br><em>都简单一点。</em></h3>
+            <p>查订单、看物流，或了解售后政策。告诉我你需要什么，我们从这里开始。</p>
+            <div class="suggestions">
+              <button class="suggestion" type="button" data-prompt="我的订单到哪了？"><span aria-hidden="true">▤</span>查询订单<small>每一程物流，都有迹可循</small></button>
+              <button class="suggestion" type="button" data-prompt="给我推荐一款耳机"><span aria-hidden="true">✧</span>发现好物<small>从你的需求，找到合适的选择</small></button>
+              <button class="suggestion" type="button" data-prompt="我想了解退换货政策"><span aria-hidden="true">↩</span>售后帮助<small>退换货政策，清楚了解再决定</small></button>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="composer-wrap">
+        <form class="composer" id="chat-form">
+          <textarea id="message" rows="1" maxlength="10000" placeholder="输入你的问题，Enter 发送，Shift+Enter 换行" aria-label="消息内容"></textarea>
+          <button class="send-btn" id="send-btn" type="submit" aria-label="发送">↑</button>
+        </form>
+        <div class="composer-note">AI 回复可能存在误差，订单与操作结果请以系统工具查询为准</div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="data-dialog">
+    <div class="dialog-head"><h3 id="dialog-title">详情</h3><button class="dialog-close" id="dialog-close" type="button" aria-label="关闭">×</button></div>
+    <div class="dialog-body" id="dialog-body"></div>
+  </dialog>
+
+  <script>
+    // CR-01：与后端的跨平台文件标识约束保持一致。
+    const idPattern = /^(?!(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$))[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,62}[A-Za-z0-9_-])?$/i;
+    const intentLabels = {
+      delivery_exception: '履约异常诊断',
+      order_query: '订单查询', return_request: '退换货', product_consult: '商品咨询',
+      complaint: '投诉', after_sale: '售后服务', promotion: '优惠活动',
+      account: '账户问题', greeting: '打招呼', other: '其他'
+    };
+    const $ = id => document.getElementById(id);
+    // 登录、切换和重置会话统一复用首次进入时的完整欢迎区。
+    const welcomeMarkup = $('welcome').outerHTML;
+    const state = {
+      userId: sessionStorage.getItem('xiaofei-token-user') || localStorage.getItem('xiaofei-user') || 'user-a',
+      sessionId: localStorage.getItem('xiaofei-session') || 'default',
+      // MR-05：令牌仅在当前浏览器会话保存，关闭标签页后需要重新登录。
+      token: sessionStorage.getItem('xiaofei-token') || '',
+      busy: false,
+      viewVersion: 0
+    };
+
+    function sessionUrl(suffix = '') {
+      return `/v1/sessions/${encodeURIComponent(state.userId)}/${encodeURIComponent(state.sessionId)}${suffix}`;
+    }
+
+    async function request(url, options = {}) {
+      const requestToken = state.token;
+      const requestView = state.viewVersion;
+      const headers = new Headers(options.headers || {});
+      if (state.token && options.auth !== false) {
+        headers.set('Authorization', `Bearer ${state.token}`);
+      }
+      // CR-08：超时只结束浏览器等待；退款是否提交仍必须查询核实。
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), url === '/v1/chat' ? 120000 : 20000);
+      let response;
+      try {
+        response = await fetch(url, {...options, headers, signal: controller.signal});
+      } catch (error) {
+        // 浏览器停止等待不等于后端停止；明确区分查询等待与退款写操作。
+        if (error.name === 'AbortError') throw new Error('等待超时，后端可能仍在处理。请勿连续提交；涉及退款时，请先查询退款进度再决定是否重试');
+        throw error;
+      } finally { clearTimeout(timer); }
+      // CR-06：记忆/摘要弹窗同样不能展示旧账户请求返回的数据。
+      if (options.auth !== false && (requestView !== state.viewVersion || requestToken !== state.token)) {
+        throw new Error('会话已切换，已忽略旧请求结果');
+      }
+      if (!response.ok) {
+        let detail = `请求失败（${response.status}）`;
+        try {
+          const data = await response.json();
+          detail = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+        } catch (_) {}
+        if (response.status === 401 && options.auth !== false && state.token === requestToken) {
+          state.token = '';
+          sessionStorage.removeItem('xiaofei-token');
+          sessionStorage.removeItem('xiaofei-token-user');
+          clearScreen();
+        }
+        const error = new Error(detail);
+        const requestId = response.headers.get('x-request-id');
+        if (requestId && !detail.includes(requestId)) error.message += `（请求编号：${requestId}）`;
+        error.status = response.status;
+        throw error;
+      }
+      if (response.status === 204) return null;
+      return response.json();
+    }
+
+    async function authenticate(mode) {
+      // MR-05：注册和登录成功后，页面只使用服务端令牌返回的用户身份。
+      const userId = $('auth-user').value.trim();
+      const password = $('auth-password').value;
+      if (!idPattern.test(userId) || password.length < 8) {
+        showToast('请输入合法用户名和至少 8 位密码');
+        return;
+      }
+      try {
+        const data = await request(`/v1/auth/${mode}`, {
+          method: 'POST',
+          auth: false,
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({user_id: userId, password})
+        });
+        state.token = data.access_token;
+        state.userId = data.user_id;
+        sessionStorage.setItem('xiaofei-token', state.token);
+        sessionStorage.setItem('xiaofei-token-user', state.userId);
+        localStorage.setItem('xiaofei-user', state.userId);
+        $('user-id').value = state.userId;
+        $('active-session').textContent = `用户 ${state.userId} · 会话 ${state.sessionId}`;
+        $('auth-password').value = '';
+        // CR-06：换账户时清除旧对话及敏感详情，同时使在途回复失效。
+        clearScreen();
+        showToast(mode === 'register' ? '注册并登录成功' : '登录成功');
+      } catch (error) { showToast(error.message); }
+    }
+
+    async function logout() {
+      if (!state.token) return showToast('当前未登录');
+      try {
+        await request('/v1/auth/logout', {method: 'POST'});
+        state.token = '';
+        sessionStorage.removeItem('xiaofei-token');
+        sessionStorage.removeItem('xiaofei-token-user');
+        clearScreen();
+        showToast('已退出登录');
+      } catch (error) { showToast(`退出未完成：${error.message}`); }
+    }
+
+    async function restoreIdentity() {
+      if (!state.token) return;
+      $('send-btn').disabled = true;
+      state.busy = true;
+      try {
+        const identity = await request('/v1/auth/me');
+        state.userId = identity.user_id;
+        sessionStorage.setItem('xiaofei-token-user', state.userId);
+        $('user-id').value = state.userId;
+        $('auth-user').value = state.userId;
+        $('active-session').textContent = `用户 ${state.userId} · 会话 ${state.sessionId}`;
+      } catch (error) { showToast(error.message); }
+      finally { state.busy = false; $('send-btn').disabled = false; }
+    }
+
+    function connectSession() {
+      if (!state.token) return showToast('请先登录');
+      const userId = state.userId;
+      const sessionId = $('session-id').value.trim();
+      if (!idPattern.test(userId) || !idPattern.test(sessionId)) {
+        showToast('ID 只能包含字母、数字、点、下划线和短横线，长度为 1–64');
+        return;
+      }
+      state.userId = userId;
+      state.sessionId = sessionId;
+      localStorage.setItem('xiaofei-user', userId);
+      localStorage.setItem('xiaofei-session', sessionId);
+      $('active-session').textContent = `用户 ${userId} · 会话 ${sessionId}`;
+      clearScreen();
+      showToast('会话已连接');
+      $('message').focus();
+    }
+
+    function removeWelcome() { $('welcome')?.remove(); }
+
+    function addMessage(role, text, result = null) {
+      if (role === 'user') removeWelcome();
+      const article = document.createElement('article');
+      article.className = `message ${role}`;
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      avatar.textContent = role === 'user' ? '你' : '飞';
+      const body = document.createElement('div');
+      body.className = 'message-body';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+      body.appendChild(bubble);
+
+      if (result) {
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        const items = [
+          `意图：${intentLabels[result.intent] || result.intent}`,
+          `置信度：${Math.round(result.confidence * 100)}%`,
+          `建议人工：${result.requires_human ? '是' : '否'}`
+        ];
+        items.forEach(value => {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          chip.textContent = value;
+          meta.appendChild(chip);
+        });
+        body.appendChild(meta);
+        if (Array.isArray(result.knowledge_providers) && result.knowledge_providers.length) {
+          const knowledge = document.createElement('div');
+          knowledge.className = 'chip';
+          const names = result.knowledge_providers.map(value => value === 'wiki' ? 'LLM Wiki' : 'RAG');
+          knowledge.textContent = `知识来源：${names.join('、')}${result.knowledge_fallback ? '（Wiki 未命中或不可用，已回退）' : ''}`;
+          body.appendChild(knowledge);
+        }
+        if (result.quality_review && result.quality_review.mode === 'enforce') {
+          const review = document.createElement('div');
+          review.className = 'chip';
+          const reviewLabels = {
+            approved: '答复已完成质检', repaired: '答复经质检修订',
+            blocked: '答复未通过质检', unavailable: '答复质检暂不可用'
+          };
+          const reasonLabels = { REVIEW_TIMEOUT: '质检超时', REVIEW_RATE_LIMITED: '质检服务限流', REVIEW_UPSTREAM_ERROR: '质检服务连接异常' };
+          const label = result.quality_review.facts_only && result.quality_review.status === 'skipped'
+            ? '仅展示查询记录，政策与诊断结论待核实'
+            : result.quality_review.facts_only
+            ? `${reasonLabels[result.quality_review.reason_code] || '质检暂不可用'}：已展示查询记录，诊断结论待核实`
+            : reasonLabels[result.quality_review.reason_code] || reviewLabels[result.quality_review.status];
+          if (label) { review.textContent = label; body.appendChild(review); }
+        }
+        // MA-08/13：展示多诉求的“已回复/未核实”，不能把回答或建议人工误称为业务已办结。
+        if (Array.isArray(result.task_outcomes) && result.task_outcomes.length > 1) {
+          const tasks = document.createElement('div');
+          tasks.className = 'follow-up';
+          tasks.textContent = '本轮处理范围：';
+          const taskLabels = {
+            answered: '已回复（具体事实以查询结果为准）',
+            verified: '核验通过（不代表业务已提交）',
+            blocked: '未通过核验，请重试或联系人工',
+            skipped: '前置步骤未通过，尚未执行',
+            waiting_confirmation: '等待填写原因、预览并确认'
+          };
+          result.task_outcomes.forEach(task => {
+            const line = document.createElement('div');
+            line.textContent = `${task.label}：${taskLabels[task.status] || '状态待核实'}`;
+            tasks.appendChild(line);
+          });
+          body.appendChild(tasks);
+        }
+        if (result.follow_up_question) {
+          const follow = document.createElement('div');
+          follow.className = 'follow-up';
+          follow.textContent = `追问：${result.follow_up_question}`;
+          body.appendChild(follow);
+        }
+        if (result.refund_action && result.workflow_status === 'waiting_confirmation') {
+          const action = result.refund_action;
+          body.appendChild(shopButton('填写原因并预览退款', () => startRefund(action.order_id, action.workflow_id)));
+        }
+        if (result.skill_execution) {
+          const details = shopNode('details', '', 'sources');
+          const stage = {needs_input: '待补充订单', blocked: '核验受阻', waiting_confirmation: '待预览与确认'};
+          details.append(shopNode('summary', '退款处理记录'),
+            shopNode('p', `处理阶段：${stage[result.skill_execution.state] || '待核实'} · 记录：${result.skill_execution.run_id}`));
+          body.appendChild(details);
+        }
+        // RAG-14：仅展示后端从本轮工具结果验证的来源，不渲染模型生成的 HTML。
+        if (result.skill_audit) {
+          const audit = document.createElement('details');
+          audit.className = 'sources';
+          const title = document.createElement('summary');
+          title.textContent = '履约证据核对清单 · ' + (result.skill_audit.status === 'incomplete' ? '证据不完整' : '含待核实项');
+          audit.appendChild(title);
+          const labels = {verified: '已核对', attention: '需关注', missing: '证据缺口'};
+          (result.skill_audit.checks || []).forEach(check => {
+            const line = document.createElement('div');
+            line.textContent = `${labels[check.status] || '待核实'}：${check.message} ${check.evidence_ids.length ? '[' + check.evidence_ids.join(', ') + ']' : ''}`;
+            audit.appendChild(line);
+          });
+          body.appendChild(audit);
+        }
+        if (result.knowledge_status && !result.knowledge_status.startsWith('VERIFIED')) {
+          const warning = document.createElement('div');
+          warning.className = 'follow-up';
+          warning.textContent = '政策暂无法核实，请稍后重试或联系人工客服。';
+          body.appendChild(warning);
+        }
+        if (Array.isArray(result.sources) && result.sources.length) {
+          const sources = document.createElement('details');
+          sources.className = 'sources';
+          const heading = document.createElement('summary');
+          heading.textContent = `查看 ${result.sources.length} 条参考来源${result.sources.some(source => source.is_demo) ? ' · 含演示资料，非正式政策' : ''}（需以原文核对）`;
+          sources.appendChild(heading);
+          result.sources.forEach(source => {
+            const line = document.createElement('div');
+            const label = `${source.doc} · ${source.section} · ${source.version || '未标版本'}${source.effective_from ? ' · 生效 ' + source.effective_from : ''}${source.is_demo ? ' · 演示资料（非正式政策）' : ''}`;
+            // 只允许安全协议链接；文本通过 textContent 防止注入。
+            if (source.source_url && /^https:\/\//i.test(source.source_url)) {
+              const link = document.createElement('a');
+              link.href = source.source_url;
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              link.textContent = label;
+              line.appendChild(link);
+            } else {
+              line.textContent = label;
+            }
+            sources.appendChild(line);
+          });
+          body.appendChild(sources);
+        }
+      }
+      article.append(avatar, body);
+      $('chat').appendChild(article);
+      $('chat-scroll').scrollTop = $('chat-scroll').scrollHeight;
+      return article;
+    }
+
+    function addTyping() {
+      const node = addMessage('assistant', '小飞正在思考');
+      node.classList.add('typing');
+      node.querySelector('.bubble').classList.add('dots');
+      return node;
+    }
+
+    async function sendMessage(text) {
+      const message = text.trim();
+      if (!message || state.busy) return;
+      if (!state.token) return showToast('请先登录');
+      const viewVersion = state.viewVersion;
+      state.busy = true;
+      $('send-btn').disabled = true;
+      addMessage('user', message);
+      $('message').value = '';
+      resizeComposer();
+      // 购买表达立即打开商品页，浏览下单无需等待模型回复。
+      const purchaseIntent = /想买|要买|购买|下单|买一|买个|买台|买双|选购/.test(message);
+      if (purchaseIntent) void showShop();
+      const typing = addTyping();
+      try {
+        const data = await request('/v1/chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({user_id: state.userId, session_id: state.sessionId, message})
+        });
+        typing.remove();
+        if (viewVersion !== state.viewVersion) return;
+        addMessage('assistant', data.result.reply, data.result);
+        if (!purchaseIntent && data.result.intent === 'product_consult' && !$('data-dialog').open) void showShop();
+      } catch (error) {
+        typing.remove();
+        if (viewVersion !== state.viewVersion) return;
+        addMessage('assistant', `请求没有完成：${error.message}`);
+        // CR-08：失败保留原问题供用户编辑重试，不自动重复请求。
+        if (!$('message').value) $('message').value = message;
+      } finally {
+        state.busy = false;
+        $('send-btn').disabled = false;
+        $('message').focus();
+      }
+    }
+
+    async function startRefund(selectedOrderId, workflowId = '') {
+      if (!state.token) return showToast('请先登录');
+      const version = state.viewVersion;
+      const user = state.userId;
+      const pendingKey = `xiaofei-refund-${user}`;
+      const pending = sessionStorage.getItem(pendingKey);
+      if (pending) {
+        openDialog('先核实上次申请', [shopNode('p', '上次提交结果尚未核实。请先查询，避免重复申请。'),
+          shopButton('核实原申请', () => resolveRefundToken(pending, version, user))]);
+        return;
+      }
+      const order = shopNode('input', '', 'shop-input');
+      order.value = typeof selectedOrderId === 'string' ? selectedOrderId : '';
+      order.maxLength = 64; order.setAttribute('aria-label', '退款订单号');
+      const reason = shopNode('textarea', '', 'shop-input');
+      reason.maxLength = 500; reason.setAttribute('aria-label', '退款原因');
+      const error = shopNode('p', '', 'shop-notice'); error.setAttribute('role', 'status');
+      const next = shopButton('核验并生成预览', async () => {
+        if (!order.value.trim() || !reason.value.trim()) { error.textContent = '请填写订单号和退款原因。'; return; }
+        next.disabled = true;
+        try {
+          const preview = await request('/v1/refunds/preview', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({order_id: order.value.trim(), reason: reason.value.trim(), workflow_id: workflowId})
+          });
+          if (version !== state.viewVersion) return;
+          renderRefundPreview(preview, version, user);
+        } catch (err) { if (version === state.viewVersion) error.textContent = err.message; }
+        finally { next.disabled = false; }
+      });
+      openDialog('申请退款 · 1/3 填写信息', [
+        shopNode('p', '当前仅支持整单退款申请。换货或部分退款请联系人工；核验不等于最终批准。', 'shop-notice'),
+        shopNode('p', '订单号'), order, shopNode('p', '退款原因（最多 500 字）'), reason, error, next]);
+    }
+
+    function renderRefundPreview(preview, version, user) {
+      let submitting = false;
+      const acknowledgement = shopNode('input'); acknowledgement.type = 'checkbox';
+      const label = shopNode('label', '我已核对订单、原因和金额，确认申请整单退款。');
+      label.prepend(acknowledgement);
+      const status = shopNode('p', '', 'shop-notice'); status.setAttribute('role', 'status');
+      const submit = shopButton('明确确认并提交', async () => {
+        if (version !== state.viewVersion || !acknowledgement.checked || submitting) return;
+        if (Date.now() >= preview.expires_at * 1000) { status.textContent = '预览已过期，请关闭后重新核实。'; submit.disabled = true; return; }
+        submit.disabled = true;
+        submitting = true;
+        acknowledgement.disabled = true;
+        sessionStorage.setItem(`xiaofei-refund-${user}`, preview.preview_token);
+        try {
+          const result = await request('/v1/refunds/confirm', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({preview_token: preview.preview_token})
+          });
+          if (version !== state.viewVersion) return;
+          sessionStorage.removeItem(`xiaofei-refund-${user}`);
+          showRefundReceipt(result);
+        } catch (err) {
+          if (version !== state.viewVersion) return;
+          // Even a conflict response is not used to infer that a concurrent submission failed.
+          status.textContent = `提交未获确认：${err.message}。请先核实原申请，不要重复提交。`;
+          $('dialog-body').append(shopButton('核实本次申请', () => resolveRefundToken(preview.preview_token, version, user)));
+        }
+      });
+      submit.disabled = true;
+      acknowledgement.addEventListener('change', () => { submit.disabled = !acknowledgement.checked; });
+      openDialog('申请退款 · 2/3 核对并确认', [
+        shopNode('p', `订单：${preview.order_id}`), shopNode('p', `申请金额：${money(preview.amount)}`, 'shop-price'),
+        shopNode('p', `原因：${preview.reason}`), shopNode('p', `预览有效至：${new Date(preview.expires_at * 1000).toLocaleString()}`),
+        shopNode('p', preview.simulation ? '这是模拟退款，不发生真实资金退回。' : '这里只核验系统初步申请条件，最终处理结果以售后审核为准。', 'shop-notice'),
+        label, status, submit]);
+    }
+
+    function showRefundReceipt(result) {
+      openDialog('申请退款 · 3/3 结果', [shopNode('p', `申请编号：${result.application_id}`),
+        shopNode('p', refundStatusLabel(result.status), 'shop-notice'),
+        shopNode('p', '记录已保存，可通过申请编号查询进度。'), shopButton('查看我的订单', showOrders)]);
+      addMessage('assistant', `申请 ${result.application_id}：${refundStatusLabel(result.status)}。订单 ${result.order_id}。`);
+    }
+
+    async function resolveRefundToken(token, version, user) {
+      try {
+        const result = await request('/v1/refunds/resolve', {method: 'POST',
+          headers: {'Content-Type': 'application/json'}, body: JSON.stringify({preview_token: token})});
+        if (version !== state.viewVersion) return;
+        sessionStorage.removeItem(`xiaofei-refund-${user}`);
+        showRefundReceipt(result);
+      } catch (err) { if (version === state.viewVersion) showToast(err.message); }
+    }
+
+    async function showRefundStatus() {
+      if (!state.token) return showToast('请先登录');
+      const applicationId = window.prompt('请输入退款申请编号；留空可核实本页最近一次提交');
+      if (applicationId === null) return;
+      try {
+        const pending = sessionStorage.getItem(`xiaofei-refund-${state.userId}`);
+        if (!applicationId.trim() && !pending) return showToast('没有可核实的申请，请填写申请编号');
+        const result = applicationId.trim()
+          ? await request(`/v1/refunds/${encodeURIComponent(applicationId.trim())}`)
+          : await request('/v1/refunds/resolve', {
+              method: 'POST', headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({preview_token: pending})
+            });
+        addMessage('assistant', `申请 ${result.application_id}：${refundStatusLabel(result.status)}。订单 ${result.order_id}。`);
+      } catch (error) { showToast(error.message); }
+    }
+
+    function section(title, values, formatter = value => value) {
+      const wrap = document.createElement('section');
+      wrap.className = 'data-section';
+      const heading = document.createElement('h4');
+      heading.textContent = title;
+      wrap.appendChild(heading);
+      if (!values?.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = '暂无';
+        wrap.appendChild(empty);
+      } else {
+        values.forEach(value => {
+          const item = document.createElement('div');
+          item.className = 'data-item';
+          item.textContent = formatter(value);
+          wrap.appendChild(item);
+        });
+      }
+      return wrap;
+    }
+
+    function memorySection(title, values, scope) {
+      // MR-17：结构化事实提供纠正、确认、单条删除操作，所有文本均用 textContent 渲染。
+      const wrap = section(title, []);
+      wrap.querySelector('.empty')?.remove();
+      if (!values?.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = '暂无';
+        wrap.appendChild(empty);
+        return wrap;
+      }
+      values.forEach(fact => {
+        const row = document.createElement('div');
+        row.className = 'data-item';
+        const detail = document.createElement('div');
+        detail.textContent = `[${fact.category}] ${fact.content} · ${fact.status} · 来源 ${fact.source} · 置信度 ${Number(fact.confidence).toFixed(2)}`;
+        const edit = document.createElement('button');
+        edit.className = 'tool-btn';
+        edit.textContent = '纠正';
+        edit.addEventListener('click', () => editMemoryFact(scope, fact));
+        const confirmButton = document.createElement('button');
+        confirmButton.className = 'tool-btn';
+        confirmButton.textContent = '确认有效';
+        confirmButton.addEventListener('click', () => mutateMemoryFact(scope, fact.id, 'confirm'));
+        const remove = document.createElement('button');
+        remove.className = 'tool-btn danger';
+        remove.textContent = '删除';
+        remove.disabled = fact.status === 'deleted';
+        remove.addEventListener('click', () => {
+          if (confirm(`确定删除这条${scope === 'short-term' ? '短期' : '长期'}记忆吗？`)) {
+            mutateMemoryFact(scope, fact.id, 'delete');
+          }
+        });
+        row.append(detail, edit, confirmButton, remove);
+        wrap.appendChild(row);
+      });
+      return wrap;
+    }
+
+    async function mutateMemoryFact(scope, factId, action, payload = null) {
+      const suffix = `/memory/${scope}/${encodeURIComponent(factId)}`;
+      const options = action === 'update'
+        ? {method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)}
+        : {method: action === 'delete' ? 'DELETE' : 'POST'};
+      const url = action === 'confirm' ? `${sessionUrl(suffix)}/confirm` : sessionUrl(suffix);
+      try {
+        await request(url, options);
+        $('data-dialog').close();
+        showToast(action === 'delete' ? '记忆已删除' : action === 'confirm' ? '记忆已确认并续期' : '记忆已纠正');
+        await showMemory();
+      } catch (error) { showToast(error.message); }
+    }
+
+    async function editMemoryFact(scope, fact) {
+      const content = prompt('请输入纠正后的记忆内容', fact.content);
+      if (content === null || !content.trim() || content.trim() === fact.content) return;
+      await mutateMemoryFact(scope, fact.id, 'update', {content: content.trim()});
+    }
+
+    function openDialog(title, content) {
+      $('dialog-title').textContent = title;
+      $('dialog-body').replaceChildren(...content);
+      $('data-dialog').showModal();
+    }
+
+    // 商品内容一律使用 textContent；订单价格和身份由服务端核验。
+    const money = value => `¥${Number(value).toFixed(2)}`;
+    const refundStatusLabel = value => value === 'simulated_completed' ? '模拟退款已完成（无真实资金退回）' : value === 'processing' ? '审核处理中' : value;
+    const orderStatus = value => ({purchased:'已购买', refunded:'已退款', pending_payment:'待付款', pending:'待发货', shipped:'已发货', delivered:'已签收', cancelled:'已取消', refund_processing:'退款处理中'}[value] || value);
+    function shopNode(tag, text = '', className = '') {
+      const node = document.createElement(tag);
+      node.textContent = text;
+      node.className = className;
+      return node;
+    }
+    function shopButton(text, action) {
+      const button = shopNode('button', text, 'tool-btn');
+      button.type = 'button';
+      button.addEventListener('click', action);
+      return button;
+    }
+    let shopLoad = 0;
+    async function showShop(query = '') {
+      if (!state.token) return showToast('请先登录后浏览商品');
+      const load = ++shopLoad;
+      const version = state.viewVersion;
+      openDialog('挑选商品', [shopNode('p', '正在加载商品…')]);
+      try {
+        const data = await request(`/v1/products?q=${encodeURIComponent(query)}`);
+        if (load !== shopLoad || version !== state.viewVersion || !$('data-dialog').open) return;
+        const search = shopNode('form', '', 'shop-search');
+        const input = shopNode('input', '', 'shop-input');
+        input.placeholder = '搜索商品名称、分类或型号';
+        input.setAttribute('aria-label', '搜索商品');
+        input.maxLength = 100;
+        input.value = query;
+        const go = shopNode('button', '搜索', 'tool-btn');
+        go.type = 'submit';
+        search.append(input, go);
+        search.addEventListener('submit', event => { event.preventDefault(); void showShop(input.value); });
+        const content = [shopNode('p', '选择商品后核对数量与金额。确认下单即完成模拟购买，订单显示已购买；不涉及真实扣款。', 'shop-notice'), search];
+        const pending = sessionStorage.getItem(`xiaofei-purchase-${state.userId}`);
+        if (pending) {
+          content.push(shopButton('恢复上次待核实的订单提交', () => {
+            try { confirmPurchase(JSON.parse(pending)); } catch (_) { showToast('提交记录损坏，请在我的订单中核实'); }
+          }));
+        }
+        const grid = shopNode('div', '', 'shop-grid');
+        for (const product of data.products) {
+          const card = shopNode('article', '', 'shop-card');
+          card.append(shopNode('span', product.category, 'shop-muted'), shopNode('h4', product.name),
+            shopNode('p', product.description), shopNode('p', money(product.price), 'shop-price'),
+            shopNode('p', `可售库存 ${product.stock} 件`, 'shop-muted'));
+          const specs = Object.entries(product.specs || {}).map(([key, value]) => `${key}：${Array.isArray(value) ? value.join(' / ') : value}`).join(' · ');
+          if (specs) card.append(shopNode('p', specs, 'shop-muted'));
+          const buy = shopButton(product.stock > 0 ? '选择并下单' : '暂时售罄', () => selectProduct(product));
+          buy.disabled = product.stock <= 0;
+          card.append(buy);
+          grid.append(card);
+        }
+        if (!data.products.length) grid.append(shopNode('p', '没有找到匹配商品，请换个关键词。'));
+        content.push(grid, shopButton('查看我的订单', showOrders));
+        openDialog('挑选商品', content);
+      } catch (error) {
+        if (load === shopLoad && version === state.viewVersion) openDialog('商品暂时无法加载', [shopNode('p', error.message), shopButton('重试', () => showShop(query))]);
+      }
+    }
+    function selectProduct(product) {
+      const pending = sessionStorage.getItem(`xiaofei-purchase-${state.userId}`);
+      if (pending) return confirmPurchase(JSON.parse(pending));
+      const quantity = shopNode('input', '', 'shop-input');
+      quantity.type = 'number'; quantity.min = '1'; quantity.max = String(Math.min(product.stock, 99)); quantity.step = '1'; quantity.value = '1';
+      quantity.setAttribute('aria-label', '购买数量');
+      const total = shopNode('p', `合计 ${money(product.price)}`, 'shop-price');
+      quantity.addEventListener('input', () => { total.textContent = `合计 ${money(product.price * Number(quantity.value))}`; });
+      openDialog('核对购买信息', [shopNode('h4', product.name), shopNode('p', `单价 ${money(product.price)}`),
+        shopNode('p', '购买数量'), quantity, total,
+        shopButton('下一步：确认订单', () => {
+          if (!quantity.reportValidity() || !Number.isInteger(Number(quantity.value))) return;
+          confirmPurchase({product_id:product.product_id, quantity:Number(quantity.value), expected_price:product.price,
+            idempotency_key:crypto.randomUUID(), name:product.name});
+        }), shopButton('返回商品', () => showShop())]);
+    }
+    function confirmPurchase(purchase) {
+      const version = state.viewVersion;
+      const owner = state.userId;
+      const storageKey = `xiaofei-purchase-${owner}`;
+      const notice = shopNode('p', '确认后将完成模拟购买并占用库存，订单显示已购买，不涉及真实扣款。提交结果不明确时，请使用同一记录重试核实。', 'shop-notice');
+      const button = shopButton('确认创建订单', async () => {
+        if (version !== state.viewVersion || owner !== state.userId) return;
+        button.disabled = true;
+        try {
+          // 先保存幂等凭据；网络超时或刷新后继续使用原凭据，避免重复下单。
+          sessionStorage.setItem(storageKey, JSON.stringify(purchase));
+          const {name, ...payload} = purchase;
+          const data = await request('/v1/orders', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+          sessionStorage.removeItem(storageKey);
+          openDialog('购买成功', [shopNode('p', `订单号：${data.order.order_id}`),
+            shopNode('p', `${orderStatus(data.order.status)} · ${money(data.order.total)}`, 'shop-price'),
+            shopNode('p', '模拟购买已完成，尚未发货。可在我的订单查看、取消或申请模拟退款。', 'shop-notice'),
+            shopButton('查看我的订单', showOrders)]);
+          addMessage('assistant', `订单 ${data.order.order_id} 已创建，金额 ${money(data.order.total)}，状态：${orderStatus(data.order.status)}。本次为模拟购买，未发生真实扣款。`);
+        } catch (error) {
+          if (version !== state.viewVersion) return;
+          notice.textContent = error.message;
+          if ([409, 422].includes(error.status)) {
+            sessionStorage.removeItem(storageKey);
+            button.textContent = '请返回商品重新核对';
+          } else {
+            button.disabled = false;
+            button.textContent = '使用原凭据重试并核实';
+          }
+        }
+      });
+      openDialog('确认订单', [shopNode('h4', purchase.name || purchase.product_id),
+        shopNode('p', `数量 ${purchase.quantity} · 单价 ${money(purchase.expected_price)}`),
+        shopNode('p', `合计 ${money(purchase.quantity * purchase.expected_price)}`, 'shop-price'), notice, button,
+        shopButton('返回商品', () => showShop())]);
+    }
+    async function showOrders() {
+      if (!state.token) return showToast('请先登录');
+      ++shopLoad;
+      const version = state.viewVersion;
+      const owner = state.userId;
+      try {
+        const data = await request('/v1/orders');
+        const content = [];
+        for (const order of data.orders) {
+          const card = shopNode('article', '', 'shop-card');
+          card.append(shopNode('h4', order.items_summary), shopNode('p', order.order_id, 'shop-muted'),
+            shopNode('p', `${orderStatus(order.status)} · ${money(order.total)}`), shopNode('p', order.created_at, 'shop-muted'));
+          if (order.purchase_mode === 'simulation') card.append(shopNode('p', '模拟购买 · 不涉及真实扣款', 'shop-muted'));
+          card.append(shopButton('订单详情', () => showOrderDetails(order.order_id)));
+          if (order.status === 'purchased' && order.purchase_mode === 'simulation') {
+            card.append(shopButton('申请模拟退款', () => {
+              if (version === state.viewVersion && owner === state.userId) void startRefund(order.order_id);
+            }));
+            const cancel = shopButton('取消订单并释放库存', async () => {
+              if (version !== state.viewVersion || owner !== state.userId) return;
+              if (!confirm(`确认取消订单 ${order.order_id}？`)) return;
+              cancel.disabled = true;
+              try { await request(`/v1/orders/${encodeURIComponent(order.order_id)}/cancel`, {method:'POST'}); await showOrders(); }
+              catch (error) { showToast(error.message); cancel.disabled = false; }
+            });
+            card.append(cancel);
+          }
+          content.push(card);
+        }
+        if (!data.orders.length) content.push(shopNode('p', '还没有订单，先挑选一件喜欢的商品吧。'));
+        content.push(shopButton('去逛商品', () => showShop()));
+        openDialog('我的订单', content);
+      } catch (error) { showToast(error.message); }
+    }
+
+    async function showOrderDetails(orderId) {
+      try {
+        const {order} = await request(`/v1/orders/${encodeURIComponent(orderId)}`);
+        const content = [shopNode('h4', `订单 ${order.order_id}`),
+          shopNode('p', `${orderStatus(order.status)} · ${money(order.total)}`, 'shop-price')];
+        for (const item of order.items) content.push(shopNode('p', `${item.name} × ${item.quantity} · 单价 ${money(item.price)}`));
+        content.push(shopNode('p', `创建时间：${order.created_at}`, 'shop-muted'));
+        if (order.purchase_mode === 'simulation') content.push(shopNode('p', '本订单为模拟购买，不涉及真实扣款或资金退回。', 'shop-notice'));
+        content.push(shopNode('p', order.status === 'cancelled' || order.status === 'refunded'
+          ? '订单已结束，所占库存已释放。'
+          : order.tracking_number ? `物流单号：${order.tracking_number}` : '尚未发货，暂无物流单号。'));
+        content.push(shopButton('返回我的订单', showOrders));
+        openDialog('订单详情', content);
+      } catch (error) { showToast(error.message); }
+    }
+
+    async function showMemory() {
+      try {
+        const data = await request(sessionUrl('/memory'));
+        if (!data.enabled) return showToast('记忆功能未启用');
+        openDialog('用户记忆', [
+          section('长期记忆授权', [data.long_term_consent ? '已授权' : '未授权']),
+          memorySection('短期记忆', data.short_term, 'short-term'),
+          memorySection(`长期记忆 · ${data.user_id}`, data.long_term, 'long-term'),
+          section('最近交互', data.recent_interactions, item => item.summary)
+        ]);
+      } catch (error) { showToast(error.message); }
+    }
+
+    async function showSkills() {
+      try {
+        const data = await request(sessionUrl('/skills'));
+        if (!data.enabled) return showToast('技能系统未启用');
+        openDialog('可用技能', [section('技能目录', data.skills, item => `${item.name}：${item.description}`)]);
+      } catch (error) { showToast(error.message); }
+    }
+
+    async function resetSession() {
+      if (!confirm(`确定重置 ${state.userId}/${state.sessionId} 的当前会话吗？`)) return;
+      try {
+        await request(sessionUrl('/reset'), {method: 'POST'});
+        clearScreen();
+        showToast('当前会话已重置，长期记忆保留');
+      } catch (error) { showToast(error.message); }
+    }
+
+    async function clearShortTermMemory() {
+      // MR-04：短期记忆清理使用独立接口，不影响聊天记录和长期记忆。
+      if (!confirm(`只清空 ${state.userId}/${state.sessionId} 的短期记忆吗？`)) return;
+      try {
+        await request(sessionUrl('/memory/short-term'), {method: 'DELETE'});
+        showToast('短期记忆已清空，对话记录和长期记忆保留');
+      } catch (error) { showToast(error.message); }
+    }
+
+    async function deleteLongTermMemory() {
+      // MR-04：长期记忆属于用户级数据，二次确认并明确不会删除当前聊天记录。
+      if (!confirm(`确定永久删除用户 ${state.userId} 的全部长期记忆吗？\n当前聊天记录仍会保留。`)) return;
+      try {
+        await request(`/v1/users/${encodeURIComponent(state.userId)}/memory`, {method: 'DELETE'});
+        showToast('长期记忆已删除，当前聊天记录保留');
+      } catch (error) { showToast(error.message); }
+    }
+
+    async function setMemoryConsent(granted) {
+      // MR-12：授权由用户主动操作；撤回授权会同步删除已有长期记忆。
+      const prompt = granted
+        ? '允许系统跨会话保存必要的长期偏好吗？敏感凭据不会被保存。'
+        : '撤回授权将同时永久删除已有长期记忆，是否继续？';
+      if (!confirm(prompt)) return;
+      try {
+        await request(`/v1/users/${encodeURIComponent(state.userId)}/memory/consent`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({granted})
+        });
+        showToast(granted ? '已授权长期记忆' : '已撤回授权并删除长期记忆');
+      } catch (error) { showToast(error.message); }
+    }
+
+    async function exportMemory() {
+      // MR-12：用户可以导出服务端当前实际持有的短期和长期记忆数据。
+      try {
+        const data = await request(sessionUrl('/memory'));
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `xiaofei-memory-${state.userId}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast('记忆数据已导出');
+      } catch (error) { showToast(error.message); }
+    }
+
+    async function showMemoryMetrics() {
+      // MR-18：前端只展示聚合成本与运行指标，不展示事件中的记忆正文。
+      try {
+        const data = await request(sessionUrl('/memory/metrics'));
+        if (!data.enabled) return showToast('记忆功能未启用');
+        openDialog('Memory 运行指标', [
+          section('质量与性能', [
+            `成功率 ${(data.success_rate * 100).toFixed(1)}%`,
+            `平均耗时 ${Number(data.average_latency_ms).toFixed(2)} ms`,
+            `累计 Token ${data.token_total}`,
+            `冲突率 ${(data.conflict_rate * 100).toFixed(1)}%`
+          ]),
+          section('存储量', Object.entries(data.storage), item => `${item[0]}：${item[1]}`),
+          section('最近事件', data.recent_events, item =>
+            `${item.event} · ${item.success ? '成功' : '失败'} · ${item.latency_ms} ms · request ${item.request_id || '-'}`)
+        ]);
+      } catch (error) { showToast(error.message); }
+    }
+
+    async function showSummaryVersions() {
+      // MR-02：用户可查看、回滚和删除自己的摘要版本。
+      try {
+        const data = await request(sessionUrl('/summaries'));
+        const content = [section(
+          `摘要历史 · 当前版本 ${data.current_version_id ?? '无'}`,
+          data.versions,
+          item => `v${item.version_id} · ${item.created_at} · ${item.source_message_count} 条消息\n${item.summary}`
+        )];
+        if (data.versions.length) {
+          const actions = document.createElement('section');
+          actions.className = 'data-section';
+          data.versions.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'data-item';
+            const rollback = document.createElement('button');
+            rollback.className = 'tool-btn';
+            rollback.textContent = `回滚 v${item.version_id}`;
+            rollback.disabled = item.version_id === data.current_version_id;
+            rollback.addEventListener('click', async () => {
+              await request(`${sessionUrl('/summaries')}/${item.version_id}/rollback`, {method: 'POST'});
+              $('data-dialog').close();
+              showToast(`已回滚到摘要 v${item.version_id}`);
+            });
+            const remove = document.createElement('button');
+            remove.className = 'tool-btn danger';
+            remove.textContent = `删除 v${item.version_id}`;
+            remove.disabled = item.version_id === data.current_version_id;
+            remove.addEventListener('click', async () => {
+              if (!confirm(`确定删除摘要版本 v${item.version_id} 吗？`)) return;
+              await request(`${sessionUrl('/summaries')}/${item.version_id}`, {method: 'DELETE'});
+              $('data-dialog').close();
+              showToast(`已删除摘要 v${item.version_id}`);
+            });
+            row.append(rollback, remove);
+            actions.appendChild(row);
+          });
+          content.push(actions);
+        }
+        openDialog('摘要版本管理', content);
+      } catch (error) { showToast(error.message); }
+    }
+
+    function clearScreen() {
+      state.viewVersion += 1;
+      $('data-dialog').close();
+      $('dialog-body').replaceChildren();
+      $('chat').innerHTML = welcomeMarkup;
+      bindSuggestions();
+      $('chat-scroll').scrollTop = 0;
+    }
+
+    function bindSuggestions() {
+      document.querySelectorAll('.suggestion').forEach(button => {
+        button.onclick = () => sendMessage(button.dataset.prompt);
+      });
+    }
+
+    function showToast(message) {
+      document.querySelector('.toast')?.remove();
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3200);
+    }
+
+    function resizeComposer() {
+      const input = $('message');
+      input.style.height = 'auto';
+      input.style.height = `${Math.min(input.scrollHeight, 140)}px`;
+    }
+
+    async function checkHealth() {
+      const status = $('service-status');
+      try {
+        const data = await request('/health/ready');
+        status.className = 'status online';
+        // CR-14：该探针只证明 API 可达，不能代表模型/MCP/Qdrant 均已就绪。
+        status.lastElementChild.textContent = `API 已连接 · ${data.active_sessions} 个会话`;
+        status.title = 'API 已连接；模型、工具和知识库能力以实际请求结果为准';
+        $('refund-btn').disabled = !(data.capabilities?.demo_refunds || data.capabilities?.simulated_purchases);
+        $('refund-btn').title = (data.capabilities?.demo_refunds || data.capabilities?.simulated_purchases) ? '' : '当前未配置退款办理服务';
+      } catch (_) {
+        status.className = 'status offline';
+        status.lastElementChild.textContent = '服务异常';
+        $('refund-btn').disabled = true;
+      }
+    }
+
+    $('user-id').value = state.userId;
+    $('auth-user').value = state.userId;
+    $('session-id').value = state.sessionId;
+    $('active-session').textContent = `用户 ${state.userId} · 会话 ${state.sessionId}`;
+    $('connect-btn').addEventListener('click', connectSession);
+    $('login-btn').addEventListener('click', () => authenticate('login'));
+    $('register-btn').addEventListener('click', () => authenticate('register'));
+    $('logout-btn').addEventListener('click', logout);
+    $('memory-btn').addEventListener('click', showMemory);
+    $('skills-btn').addEventListener('click', showSkills);
+    $('reset-btn').addEventListener('click', resetSession);
+    $('clear-stm-btn').addEventListener('click', clearShortTermMemory);
+    $('delete-ltm-btn').addEventListener('click', deleteLongTermMemory);
+    $('grant-memory-btn').addEventListener('click', () => setMemoryConsent(true));
+    $('revoke-memory-btn').addEventListener('click', () => setMemoryConsent(false));
+    $('export-memory-btn').addEventListener('click', exportMemory);
+    $('memory-metrics-btn').addEventListener('click', showMemoryMetrics);
+    $('browse-products-btn').addEventListener('click', () => showShop());
+    $('my-orders-btn').addEventListener('click', showOrders);
+    $('shop-btn').addEventListener('click', () => showShop());
+    $('orders-btn').addEventListener('click', showOrders);
+    $('refund-btn').addEventListener('click', startRefund);
+    $('refund-status-btn').addEventListener('click', showRefundStatus);
+    $('summary-versions-btn').addEventListener('click', showSummaryVersions);
+    $('clear-btn').addEventListener('click', clearScreen);
+    $('dialog-close').addEventListener('click', () => $('data-dialog').close());
+    $('data-dialog').addEventListener('click', event => {
+      if (event.target === $('data-dialog')) $('data-dialog').close();
+    });
+    $('chat-form').addEventListener('submit', event => {
+      event.preventDefault();
+      sendMessage($('message').value);
+    });
+    $('message').addEventListener('input', resizeComposer);
+    $('message').addEventListener('keydown', event => {
+      const isEnter = event.key === 'Enter' || event.keyCode === 13;
+      const isComposing = event.isComposing || event.keyCode === 229;
+      if (isEnter && !event.shiftKey && !isComposing) {
+        event.preventDefault();
+        event.stopPropagation();
+        sendMessage($('message').value);
+      }
+    });
+    bindSuggestions();
+    checkHealth();
+    restoreIdentity();
+    setInterval(checkHealth, 15000);
+  </script>
+</body>
+</html>

@@ -7,12 +7,14 @@ Evaluator 自己不碰 Agent，只负责：让 Sandbox 跑出 RunTrace，再用 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import json
 
 from openai import OpenAI
 
 from app.evaluation import metrics
 from app.evaluation.dataset import EvalCase
 from app.evaluation.sandbox import Sandbox
+from app.evaluation.statistics import percentile, rate, retrieval_scores
 
 
 @dataclass
@@ -30,6 +32,9 @@ class EvalResult:
     token_pass: bool | None = None
     process_soundness: float | None = None  # judge 1-5 归一化到 0-1
     route_match: float | None = None
+    recall_at_k: float | None = None
+    mrr_at_k: float | None = None
+    ndcg_at_k: float | None = None
 
     # ---------- 结果指标 ----------
     intent_match: float | None = None
@@ -74,6 +79,7 @@ class Evaluator:
     def run_case(self, case: EvalCase) -> EvalResult:
         trace = self.sandbox.run(case)
         res = EvalResult(case_id=case.id, description=case.description, trace=trace.to_dict())
+        res.token_cost = trace.total_tokens  # Preserve partial usage even if the run failed.
 
         if trace.error:
             res.error = trace.error
@@ -81,6 +87,9 @@ class Evaluator:
 
         try:
             resp = trace.final_response
+            if resp is None:
+                res.error = "MissingFinalResponse"
+                return res
             reply = resp.reply if resp else ""
             actual_intent = resp.intent.value if resp else ""
             actual_human = resp.requires_human if resp else False
@@ -96,7 +105,23 @@ class Evaluator:
                 case.min_tool_calls, res.business_tool_calls,
             )
             res.token_pass = metrics.token_cost_pass(trace.total_tokens, case.max_tokens)
+            if any(not call.usage_available for call in trace.llm_calls):
+                res.token_pass = None
+                if case.max_tokens is not None:
+                    res.error = "TokenUsageUnavailable"
             res.route_match = metrics.route_match(case.expected_route, trace.route)
+            if case.relevant_chunk_ids:
+                observations = [obs for obs in trace.tool_observations if obs.name == "search_knowledge"]
+                retrieved = []
+                if observations:
+                    try:
+                        payload = json.loads(observations[-1].result)
+                        if isinstance(payload, dict) and payload.get("success") is True and isinstance(payload.get("results"), list):
+                            retrieved = [hit.get("chunk_id") for hit in payload["results"] if isinstance(hit, dict)]
+                    except (TypeError, ValueError):
+                        pass
+                for key, value in retrieval_scores(case.relevant_chunk_ids, retrieved, case.retrieval_k).items():
+                    setattr(res, key, value)
 
             # ---------- 结果指标（代码规则）----------
             res.intent_match = metrics.intent_match(case.expected_intent, actual_intent)
@@ -110,7 +135,7 @@ class Evaluator:
                 q_score, q_reason = metrics.judge_answer_quality(
                     self.client, self.model, last_input, reply, case.expected_keywords
                 )
-                res.answer_quality = q_score / 5.0 if q_score else None
+                res.answer_quality = q_score / 5.0
                 res.judge_reasons["answer_quality"] = q_reason
 
                 f_score, f_reason = metrics.judge_faithfulness(
@@ -122,7 +147,7 @@ class Evaluator:
                 p_score, p_reason = metrics.judge_process_soundness(
                     self.client, self.model, last_input, called
                 )
-                res.process_soundness = p_score / 5.0 if p_score else None
+                res.process_soundness = p_score / 5.0
                 res.judge_reasons["process_soundness"] = p_reason
 
             # ---------- 汇总 ----------
@@ -155,9 +180,10 @@ class Evaluator:
             res.tool_accuracy, res.tool_efficiency, res.process_soundness, res.route_match,
             res.intent_match, res.keyword_coverage, res.requires_human_match,
             res.answer_quality, res.faithfulness,
+            res.recall_at_k, res.mrr_at_k, res.ndcg_at_k,
         ]
         present = [d for d in dims if d is not None]
-        return all(d >= self.pass_threshold for d in present) if present else True
+        return bool(present) and all(d >= self.pass_threshold for d in present)
 
     def _aggregate(self, results: list[EvalResult]) -> dict:
         total = len(results)
@@ -186,8 +212,24 @@ class Evaluator:
                 ]),
                 "answer_quality": _avg([r.answer_quality for r in results]),
                 "faithfulness": _avg([r.faithfulness for r in results]),
+                "recall_at_k": _avg([r.recall_at_k for r in results]),
+                "mrr_at_k": _avg([r.mrr_at_k for r in results]),
+                "ndcg_at_k": _avg([r.ndcg_at_k for r in results]),
             },
         }
+        calls = sum(r.trace.get("num_llm_calls", 0) for r in results)
+        known = sum(r.trace.get("usage_known_calls", 0) for r in results)
+        latency = [r.trace["elapsed_ms"] for r in results if "elapsed_ms" in r.trace]
+        summary.update({
+            "pass_rate_detail": rate(passed, total),
+            "error_rate": rate(sum(r.error is not None for r in results), total),
+            "usage_coverage": rate(known, calls),
+            "llm_error_rate": rate(sum(r.trace.get("llm_failed_calls", 0) for r in results), calls),
+            "latency_ms": {"count": len(latency), "p50": percentile(latency, 50), "p95": percentile(latency, 95)},
+            "metric_sample_counts": {key: sum(getattr(r, key) is not None for r in results)
+                                     for key in summary["metric_averages"]},
+            "token_measurement": "complete" if known == calls else "partial_lower_bound",
+        })
         return {
             "summary": summary,
             "cases": [self._result_to_dict(r) for r in results],
@@ -211,6 +253,9 @@ class Evaluator:
                 "token_pass": r.token_pass,
                 "process_soundness": r.process_soundness,
                 "route_match": r.route_match,
+                "recall_at_k": r.recall_at_k,
+                "mrr_at_k": r.mrr_at_k,
+                "ndcg_at_k": r.ndcg_at_k,
                 "process_score": r.process_score,
             },
             "result": {

@@ -15,6 +15,41 @@ request_id_var: contextvars.ContextVar[str] = contextvars.ContextVar(
 )
 
 
+class AuthenticationLimitMiddleware:
+    """CR-11：认证哈希独立限并发，来源 IP 固定窗口限速且计数表有界。"""
+
+    def __init__(self, app, max_concurrency: int = 4, attempts_per_minute: int = 20):
+        self.app = app
+        self.slots = asyncio.Semaphore(max_concurrency)
+        self.limit = attempts_per_minute
+        self.clients: dict[str, tuple[float, int]] = {}
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or scope.get("path") not in {"/v1/auth/login", "/v1/auth/register"}:
+            return await self.app(scope, receive, send)
+        now = time.monotonic()
+        # 只信任 ASGI 已解析的客户端地址；代理转发可信范围由部署层配置。
+        peer = (scope.get("client") or ("unknown",))[0]
+        started, count = self.clients.get(peer, (now, 0))
+        if now - started >= 60:
+            started, count = now, 0
+        if peer not in self.clients and len(self.clients) >= 4096:
+            self.clients = {key: value for key, value in self.clients.items() if now - value[0] < 60}
+        if count >= self.limit or (peer not in self.clients and len(self.clients) >= 4096):
+            return await JSONResponse({"detail": "登录尝试过于频繁，请稍后重试"}, status_code=429,
+                                      headers={"Retry-After": "60"})(scope, receive, send)
+        self.clients[peer] = (started, count + 1)
+        try:
+            await asyncio.wait_for(self.slots.acquire(), timeout=0.1)
+        except TimeoutError:
+            return await JSONResponse({"detail": "登录服务繁忙，请稍后重试"}, status_code=503,
+                                      headers={"Retry-After": "1"})(scope, receive, send)
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            self.slots.release()
+
+
 class RequestContextMiddleware:
     """为每个请求生成追踪 ID，并返回服务耗时。"""
 

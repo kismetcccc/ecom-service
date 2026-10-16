@@ -1,4 +1,6 @@
-"""MCP 工具 schema → OpenAI function calling 格式转换。"""
+"""MCP tool schema to model schema; internal credentials stay hidden."""
+
+from copy import deepcopy
 
 
 def mcp_tools_to_openai(mcp_tools: list) -> list[dict]:
@@ -9,12 +11,15 @@ def mcp_tools_to_openai(mcp_tools: list) -> list[dict]:
     """
     result = []
     for tool in mcp_tools:
+        schema = deepcopy(getattr(tool, "inputSchema", None) or tool.input_schema)
+        schema.get("properties", {}).pop("auth_token", None)
+        schema["required"] = [name for name in schema.get("required", []) if name != "auth_token"]
         result.append({
             "type": "function",
             "function": {
                 "name": tool.name,
                 "description": tool.description or "",
-                "parameters": tool.inputSchema,
+                "parameters": schema,
             },
         })
     return result

@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import math
 from pathlib import Path
+from uuid import uuid4
 
 from app.agent.rag.backends.base import RetrievedChunk, VectorBackend
 from app.agent.rag.chunker import Chunk
@@ -50,9 +51,12 @@ class NumpyBackend(VectorBackend):
             "chunks": [c.to_dict() for c in chunks],
             "vectors": vectors,
         }
-        self._index_path.write_text(
-            json.dumps(payload, ensure_ascii=False), encoding="utf-8"
-        )
+        temporary = self._index_path.with_name(f".{self._index_path.name}.{uuid4().hex}.tmp")
+        try:
+            temporary.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+            temporary.replace(self._index_path)
+        finally:
+            temporary.unlink(missing_ok=True)
 
     def search(self, query_vector: list[float], top_k: int) -> list[RetrievedChunk]:
         if not self._chunks:
@@ -88,6 +92,14 @@ class NumpyBackend(VectorBackend):
         if not self._embedding_model and self._index_path.exists():
             self.load()
         return self._embedding_model
+
+    def retrieval_snapshot(self, query_vector, top_k, embedding_model):
+        # A private reader keeps concurrent queries and index reloads isolated.
+        snapshot = NumpyBackend(self._index_path)
+        snapshot.load()
+        if snapshot.expected_embedding_model() != embedding_model:
+            raise ValueError("索引的 Embedding 模型已变化，请重建检索器")
+        return snapshot.search(query_vector, top_k), list(snapshot._chunks)
 
 
 def _cosine(a: list[float], b: list[float]) -> float:

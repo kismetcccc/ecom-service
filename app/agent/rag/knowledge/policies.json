@@ -1,0 +1,6 @@
+{
+  "退换货政策": {"policy_id": "return-policy-demo", "version": "demo-1", "status": "demo", "owner": "demo-seed", "source_url": ""},
+  "配送说明": {"policy_id": "delivery-policy-demo", "version": "demo-1", "status": "demo", "owner": "demo-seed", "source_url": ""},
+  "常见问题FAQ": {"policy_id": "faq-demo", "version": "demo-1", "status": "demo", "owner": "demo-seed", "source_url": ""},
+  "会员权益": {"policy_id": "membership-demo", "version": "demo-1", "status": "demo", "owner": "demo-seed", "source_url": ""}
+}

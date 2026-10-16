@@ -1,0 +1,14 @@
+# 2026-10-10: build dependencies online; execute the trusted offline suite without network.
+FROM python:3.12-slim
+WORKDIR /workspace
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --no-cache-dir -r requirements-dev.txt
+COPY app ./app
+COPY mcp_server ./mcp_server
+COPY tests ./tests
+COPY main.py ./
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+RUN useradd --uid 10001 --create-home evaluator
+USER 10001:10001
+ENTRYPOINT ["python", "-m", "app.evaluation.benchmark"]
+CMD ["--output", "/output/engineering.json"]

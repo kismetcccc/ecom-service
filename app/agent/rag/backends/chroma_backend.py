@@ -85,7 +85,19 @@ class ChromaBackend(VectorBackend):
             embeddings=vectors,
             documents=[c.text for c in chunks],
             metadatas=[
-                {"doc": c.doc, "section": c.section, "chunk_id": c.chunk_id}
+                {
+                    "doc": c.doc,
+                    "section": c.section,
+                    "chunk_id": c.chunk_id,
+                    "policy_id": c.policy_id,
+                    "version": c.version,
+                    "status": c.status,
+                    "effective_from": c.effective_from,
+                    "effective_to": c.effective_to,
+                    "owner": c.owner,
+                    "source_url": c.source_url,
+                    "content_hash": c.content_hash,
+                }
                 for c in chunks
             ],
         )
@@ -114,6 +126,14 @@ class ChromaBackend(VectorBackend):
                 doc=meta.get("doc", ""),
                 section=meta.get("section", ""),
                 text=doc_text,
+                policy_id=meta.get("policy_id", ""),
+                version=meta.get("version", "legacy"),
+                status=meta.get("status", "demo"),
+                effective_from=meta.get("effective_from", ""),
+                effective_to=meta.get("effective_to", ""),
+                owner=meta.get("owner", ""),
+                source_url=meta.get("source_url", ""),
+                content_hash=meta.get("content_hash", ""),
             )
             score = 1.0 - float(dist)  # cosine distance → similarity
             out.append(RetrievedChunk(chunk=chunk, score=score))
@@ -151,3 +171,28 @@ class ChromaBackend(VectorBackend):
             except FileNotFoundError:
                 return ""
         return self._embedding_model
+
+    def retrieval_snapshot(self, query_vector, top_k, embedding_model):
+        reader = ChromaBackend(self._persist_dir, self._collection_name)
+        reader._client = self._client
+        reader.load()
+        if reader.expected_embedding_model() != embedding_model:
+            raise ValueError("索引的 Embedding 模型已变化，请重建检索器")
+        chunks = []
+        offset = 0
+        while True:
+            page = reader._collection.get(limit=256, offset=offset,
+                                          include=["documents", "metadatas"])
+            for cid, text, meta in zip(page["ids"], page["documents"], page["metadatas"]):
+                fields = {key: value for key, value in (meta or {}).items()
+                          if key in Chunk.__dataclass_fields__}
+                fields.update(chunk_id=cid, text=text or "")
+                fields.setdefault("doc", "")
+                fields.setdefault("section", "")
+                chunks.append(Chunk(**fields))
+            offset += len(page["ids"])
+            if len(page["ids"]) < 256:
+                break
+        if not chunks:
+            return [], []
+        return reader.search(query_vector, min(top_k, len(chunks))), chunks

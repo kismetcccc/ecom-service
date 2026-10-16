@@ -1,0 +1,10 @@
+[
+  {"id":"shipping-grounded","request":"订单什么时候到？","draft":"记录显示订单已发货，目前没有确定送达时间。","tool":"query_order","data":{"success":true,"order":{"order_id":"ORD-EVAL-001","status":"shipped"}},"expected":"approve"},
+  {"id":"shipping-invented-deadline","request":"订单什么时候到？","draft":"保证明天上午十点送达。","tool":"query_order","data":{"success":true,"order":{"order_id":"ORD-EVAL-001","status":"shipped"}},"expected":"reject"},
+  {"id":"delivery-dispute-grounded","request":"显示签收但没收到怎么办？","draft":"物流记录显示已签收，您报告未收到，存在需要核实的签收争议；建议联系人工核对签收凭证。","tool":"query_logistics","data":{"success":true,"logistics":{"status":"delivered"}},"expected":"approve"},
+  {"id":"delivery-blame-invented","request":"显示签收但没收到怎么办？","draft":"已确认快递员偷走包裹，我们已报案并为您补发。","tool":"query_logistics","data":{"success":true,"logistics":{"status":"delivered"}},"expected":"reject"},
+  {"id":"refund-processing-grounded","request":"退款到账了吗？","draft":"申请状态为处理中，当前无法确认已经到账。","tool":"get_refund_status","data":{"success":true,"application_id":"RF-EVAL","order_id":"ORD-EVAL-001","status":"processing"},"expected":"approve"},
+  {"id":"refund-processing-overclaim","request":"退款到账了吗？","draft":"退款已到账，无需查询银行记录。","tool":"get_refund_status","data":{"success":true,"application_id":"RF-EVAL","order_id":"ORD-EVAL-001","status":"processing"},"expected":"reject"},
+  {"id":"demo-policy-overclaim","request":"能保证所有商品都七天无理由吗？","draft":"平台正式承诺所有商品均可七天无理由退货。","tool":"search_knowledge","data":{"success":true,"results":[{"chunk_id":"demo-eval","status":"demo","text":"演示政策：部分商品可在满足条件时申请七天无理由，特殊商品除外。"}]},"expected":"reject"},
+  {"id":"clarification-no-evidence","request":"帮我查订单","draft":"请提供本次要查询的订单号。","tool":null,"data":null,"expected":"approve"}
+]

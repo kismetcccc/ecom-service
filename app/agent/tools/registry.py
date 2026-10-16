@@ -4,9 +4,10 @@ import json
 from typing import Callable
 
 from app.agent.tools.order import query_order
-from app.agent.tools.product import query_product
+from app.agent.tools.product import query_product, search_products
 from app.agent.tools.logistics import query_logistics
-from app.agent.tools.refund import apply_refund
+from app.agent.tools.refund import apply_refund, get_refund_status, get_return_eligibility, preview_refund
+from app.agent.tools.context import ToolContext
 from app.agent.tools.knowledge import search_knowledge
 from app.agent.tools.user_orders import list_user_orders
 from app.agent.tools.memory_tool import recall_user_memory
@@ -15,8 +16,12 @@ from app.agent.tools.skill_tool import load_skill
 _TOOL_MAP: dict[str, Callable] = {
     "query_order": query_order,
     "query_product": query_product,
+    "search_products": search_products,
     "query_logistics": query_logistics,
     "apply_refund": apply_refund,
+    "preview_refund": preview_refund,
+    "get_refund_status": get_refund_status,
+    "get_return_eligibility": get_return_eligibility,
     "search_knowledge": search_knowledge,
     "list_user_orders": list_user_orders,
     "recall_user_memory": recall_user_memory,
@@ -122,20 +127,20 @@ TOOL_DEFINITIONS: list[dict] = [
         "type": "function",
         "function": {
             "name": "apply_refund",
-            "description": "为指定订单申请退款。注意：这是一个敏感操作，调用前应先与用户确认",
+            "description": "提交已在页面明确确认的退款预览；缺少已确认凭据时不可调用",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "order_id": {
+                    "preview_token": {
                         "type": "string",
-                        "description": "要退款的订单号",
+                        "description": "已确认的退款预览令牌",
                     },
-                    "reason": {
+                    "idempotency_key": {
                         "type": "string",
-                        "description": "退款原因，例如「尺码不合适」「质量问题」「不想要了」",
+                        "description": "本次提交的唯一幂等标识",
                     },
                 },
-                "required": ["order_id", "reason"],
+                "required": ["preview_token", "idempotency_key"],
             },
         },
     },
@@ -176,7 +181,8 @@ TOOL_DEFINITIONS: list[dict] = [
                     "skill_name": {
                         "type": "string",
                         "description": "要加载的技能名称，如 process-return、track-order、product-recommend",
-                    }
+                    },
+                    "resource": {"type": "string", "description": "可选：技能返回清单中的资源路径；不传时加载主指令"}
                 },
                 "required": ["skill_name"],
             },
@@ -184,14 +190,34 @@ TOOL_DEFINITIONS: list[dict] = [
     },
 ]
 
+# MCP 与本地模式共享业务契约；敏感工具始终要求服务端身份。
+for _name, _description, _properties, _required in [
+    ("get_return_eligibility", "查询本人订单的售后资格，不代替最终人工审核", {"order_id": {"type": "string"}}, ["order_id"]),
+    ("preview_refund", "预览本人订单的退款申请；用户须在页面明确确认", {"order_id": {"type": "string"}, "reason": {"type": "string"}}, ["order_id", "reason"]),
+    ("get_refund_status", "查询本人退款申请状态", {"application_id": {"type": "string"}, "idempotency_key": {"type": "string"}}, []),
+    ("search_products", "按类目和价格区间查询商品；库存与价格以返回更新时间为准", {"category": {"type": "string"}, "min_price": {"type": "number"}, "max_price": {"type": "number"}, "limit": {"type": "integer"}}, []),
+]:
+    TOOL_DEFINITIONS.append({"type": "function", "function": {"name": _name, "description": _description, "parameters": {"type": "object", "properties": _properties, "required": _required}}})
 
-def execute_tool(name: str, arguments: dict) -> str:
+PROTECTED_TOOLS = {
+    "query_order", "query_logistics", "list_user_orders", "apply_refund",
+    "preview_refund", "get_refund_status", "get_return_eligibility",
+}
+
+
+def execute_tool(name: str, arguments: dict, *, context: ToolContext | None = None) -> str:
     """根据工具名称分发执行，返回 JSON 字符串结果。"""
     func = _TOOL_MAP.get(name)
     if not func:
-        return json.dumps({"error": f"未知工具: {name}"}, ensure_ascii=False)
+        return json.dumps({"success": False, "error_code": "UNKNOWN_TOOL", "error": "未知工具"}, ensure_ascii=False)
     try:
-        result = func(**arguments)
-    except Exception as e:
-        result = {"error": f"工具执行出错: {e}"}
+        if name in PROTECTED_TOOLS:
+            if context is None:
+                result = {"success": False, "error_code": "UNAUTHORIZED", "error": "请先登录"}
+            else:
+                result = func(**arguments, context=context)
+        else:
+            result = func(**arguments)
+    except Exception:
+        result = {"success": False, "error_code": "TOOL_ERROR", "error": "工具暂时不可用"}
     return json.dumps(result, ensure_ascii=False)

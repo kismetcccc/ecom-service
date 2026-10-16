@@ -33,6 +33,9 @@ class EvalCase:
     min_tool_calls: int | None = None  # 理论最少工具调用次数（算效率用），None=不校验
     max_tokens: int | None = None  # token 预算上限，None=不设上限
     expected_route: str | None = None  # 多 Agent 期望路由（presale/postsale/complaint），可选
+    # 2026-10-10: labels refer to the last search_knowledge call in the case.
+    relevant_chunk_ids: list[str] = field(default_factory=list)
+    retrieval_k: int = 3
 
 
 def load_dataset(path: str | Path) -> list[EvalCase]:

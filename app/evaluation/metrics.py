@@ -139,7 +139,10 @@ def judge_answer_quality(
             ],
         )
         data = _parse_json(response.choices[0].message.content or "")
-        return float(data["score"]), data.get("reason", "")
+        score = data["score"]
+        if type(score) not in (int, float) or not 1 <= score <= 5:
+            raise ValueError("score must be a number from 1 to 5")
+        return float(score), data.get("reason", "")
     except (json.JSONDecodeError, KeyError, ValueError, TypeError) as e:
         return 0.0, f"质量评分解析失败: {e}"
 
@@ -174,7 +177,9 @@ def judge_faithfulness(
             ],
         )
         data = _parse_json(response.choices[0].message.content or "")
-        faithful = bool(data["faithful"])
+        faithful = data["faithful"]
+        if type(faithful) is not bool:
+            raise ValueError("faithful must be a boolean")
         return (1.0 if faithful else 0.0), data.get("reason", "")
     except (json.JSONDecodeError, KeyError, ValueError, TypeError) as e:
         return 0.0, f"幻觉检测解析失败: {e}"
@@ -208,6 +213,9 @@ def judge_process_soundness(
             ],
         )
         data = _parse_json(response.choices[0].message.content or "")
-        return float(data["score"]), data.get("reason", "")
+        score = data["score"]
+        if type(score) not in (int, float) or not 1 <= score <= 5:
+            raise ValueError("score must be a number from 1 to 5")
+        return float(score), data.get("reason", "")
     except (json.JSONDecodeError, KeyError, ValueError, TypeError) as e:
         return 0.0, f"过程评分解析失败: {e}"

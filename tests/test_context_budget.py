@@ -19,6 +19,31 @@ from app.multi_agent.orchestrator import MultiAgentOrchestrator
 from app.server import api
 
 
+class FakeMemoryManager:
+    """为事务回滚测试提供可观察的短期记忆状态。"""
+
+    def __init__(self, facts=None):
+        self.facts = list(facts or [])
+
+    def stm_to_dict(self):
+        return {"facts": list(self.facts)}
+
+    def restore_stm(self, data):
+        self.facts = list(data.get("facts", []))
+
+    def update_short_term(self, _messages):
+        self.facts.append("本轮临时事实")
+
+    def stage_long_term_checkpoint(self, *_args):
+        return None
+
+    def commit_long_term_checkpoint(self, _path):
+        return None
+
+    def discard_staged_checkpoint(self, _path):
+        return None
+
+
 def manager(window: int = 200, reserved: int = 20, keep: int = 2):
     return ContextBudgetManager(window, reserved, keep)
 
@@ -96,7 +121,7 @@ def test_single_agent_compacts_before_model_call(monkeypatch):
     agent.tool_manager = SimpleNamespace(tool_definitions=[])
     agent.skill_manager = None
     agent.memory_manager = SimpleNamespace(
-        build_memory_prompt_sections=lambda: []
+        build_memory_prompt_sections=lambda *_args: []
     )
     agent.client = object()
     agent.model = "fake-model"
@@ -121,7 +146,7 @@ def test_multi_agent_uses_same_preflight_compaction(monkeypatch):
     orchestrator.context_budget = manager(window=1200, reserved=100, keep=1)
     orchestrator.skill_manager = None
     orchestrator.memory_manager = SimpleNamespace(
-        build_memory_prompt_sections=lambda: []
+        build_memory_prompt_sections=lambda *_args: []
     )
     orchestrator.client = object()
     orchestrator.model = "fake-model"
@@ -148,6 +173,8 @@ def test_rejected_turn_does_not_pollute_single_agent_history():
     agent = EcomAgent.__new__(EcomAgent)
     original = [{"role": "assistant", "content": "existing"}]
     agent.raw_messages = list(original)
+    agent.summary = "existing summary"
+    agent.memory_manager = FakeMemoryManager(["existing fact"])
 
     def reject():
         raise ContextWindowExceeded(101, 100)
@@ -158,6 +185,97 @@ def test_rejected_turn_does_not_pollute_single_agent_history():
         agent.chat("too long")
 
     assert agent.raw_messages == original
+    assert agent.summary == "existing summary"
+    assert agent.memory_manager.facts == ["existing fact"]
+
+
+def test_single_agent_rolls_back_when_summary_generation_fails(monkeypatch):
+    agent = EcomAgent.__new__(EcomAgent)
+    original = [
+        {"role": "user", "content": "旧问题"},
+        {"role": "assistant", "content": "旧回答"},
+    ]
+    agent.raw_messages = list(original)
+    agent.summary = "旧摘要"
+    agent.memory_manager = FakeMemoryManager(["旧事实"])
+    agent.history_keep_recent = 1
+    agent.context_budget = manager(keep=1)
+    agent.client = object()
+    agent.model = "fake-model"
+    agent._react_loop = agent._compress_history
+
+    def fail_summary(**_kwargs):
+        raise RuntimeError("summary failed")
+
+    monkeypatch.setattr("app.agent.chat.summarize", fail_summary)
+
+    with pytest.raises(RuntimeError, match="summary failed"):
+        agent.chat("本轮问题")
+
+    assert agent.raw_messages == original
+    assert agent.summary == "旧摘要"
+    assert agent.memory_manager.facts == ["旧事实"]
+
+
+def test_single_agent_rolls_back_when_save_fails(monkeypatch):
+    agent = EcomAgent.__new__(EcomAgent)
+    original = [{"role": "assistant", "content": "旧回答"}]
+    agent.raw_messages = list(original)
+    agent.summary = "旧摘要"
+    agent.memory_manager = FakeMemoryManager(["旧事实"])
+    agent.history_threshold = 999
+    agent.session_path = "unused.json"
+    agent._react_loop = lambda: "本轮回答"
+    agent._extract_structured_response = lambda *_: SimpleNamespace(
+        model_dump_json=lambda: '{"reply":"本轮回答"}'
+    )
+
+    def fail_save(*_args, **_kwargs):
+        raise OSError("save failed")
+
+    monkeypatch.setattr("app.agent.chat.save_session", fail_save)
+
+    with pytest.raises(OSError, match="save failed"):
+        agent.chat("本轮问题")
+
+    assert agent.raw_messages == original
+    assert agent.summary == "旧摘要"
+    assert agent.memory_manager.facts == ["旧事实"]
+
+
+def test_multi_agent_rolls_back_after_compaction_then_token_recheck_failure():
+    orchestrator = MultiAgentOrchestrator.__new__(MultiAgentOrchestrator)
+    original = [
+        {"role": "user", "content": "旧问题"},
+        {"role": "assistant", "content": "旧回答"},
+    ]
+    orchestrator.raw_messages = list(original)
+    orchestrator.summary = "旧摘要"
+    orchestrator.memory_manager = FakeMemoryManager(["旧事实"])
+    from app.multi_agent.router import RouteDecision
+    orchestrator.router = SimpleNamespace(decide=lambda *_: RouteDecision("postsale", ("order",), 1.0, "test"))
+    orchestrator.agents = {
+        "postsale": SimpleNamespace(name="客服", tool_manager=SimpleNamespace(tool_definitions=[
+            {"function": {"name": "query_order"}}, {"function": {"name": "list_user_orders"}},
+        ]))
+    }
+
+    def fail_after_compaction(_agent):
+        # 模拟 _prepare_messages 已完成滚动摘要，但 Token 复检仍然失败。
+        orchestrator.raw_messages = [
+            {"role": "user", "content": "本轮问题"}
+        ]
+        orchestrator.summary = "错误的新摘要"
+        raise ContextWindowExceeded(101, 100)
+
+    orchestrator._prepare_task_messages = fail_after_compaction
+
+    with pytest.raises(ContextWindowExceeded):
+        orchestrator.chat("本轮问题")
+
+    assert orchestrator.raw_messages == original
+    assert orchestrator.summary == "旧摘要"
+    assert orchestrator.memory_manager.facts == ["旧事实"]
 
 
 def test_subagent_applies_reserved_output_limit():
@@ -199,6 +317,6 @@ def test_http_api_maps_context_overflow_to_413(monkeypatch):
     payload = api.ChatRequest(user_id="user-a", message="hello")
 
     with pytest.raises(HTTPException) as exc_info:
-        asyncio.run(api.chat(payload))
+        asyncio.run(api.chat(payload, authenticated_user="user-a"))
 
     assert exc_info.value.status_code == 413

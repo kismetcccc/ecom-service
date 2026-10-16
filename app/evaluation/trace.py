@@ -25,6 +25,9 @@ class LLMCallRecord:
     total_tokens: int
     tool_calls: list[dict] = field(default_factory=list)  # 本次响应请求的工具 [{name, arguments}]
     latency_ms: float = 0.0
+    success: bool = True
+    usage_available: bool = True
+    error_type: str | None = None
 
 
 @dataclass
@@ -34,6 +37,7 @@ class ToolObservation:
     name: str
     arguments: dict
     result: str  # 工具返回的 JSON 字符串
+    latency_ms: float = 0.0
 
 
 @dataclass
@@ -47,6 +51,7 @@ class RunTrace:
     llm_calls: list[LLMCallRecord] = field(default_factory=list)
     tool_observations: list[ToolObservation] = field(default_factory=list)
     error: str | None = None  # 运行异常信息，None=正常
+    elapsed_ms: float = 0.0
 
     # ---------- 便捷聚合属性 ----------
     @property
@@ -81,4 +86,9 @@ class RunTrace:
             "num_tool_calls": self.num_tool_calls,
             "tool_calls": self.tool_call_names,
             "error": self.error,
+            "elapsed_ms": self.elapsed_ms,
+            "llm_failed_calls": sum(not c.success for c in self.llm_calls),
+            "usage_known_calls": sum(c.usage_available for c in self.llm_calls),
+            "llm_latency_ms": [c.latency_ms for c in self.llm_calls],
+            "tool_latency_ms": [c.latency_ms for c in self.tool_observations],
         }

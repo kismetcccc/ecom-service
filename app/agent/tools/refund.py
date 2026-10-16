@@ -1,28 +1,30 @@
-from app.agent.tools.mock_data import ORDERS
+from app.agent.tools.context import ToolContext
+from app.agent.tools.order_store import get_order_store, failure
 
 
-def apply_refund(order_id: str, reason: str) -> dict:
-    """为指定订单申请退款，需提供退款原因。"""
-    order = ORDERS.get(order_id)
-    if not order:
-        return {"success": False, "error": f"未找到订单 {order_id}，请核实订单号"}
+def get_return_eligibility(order_id: str, *, context: ToolContext | None = None) -> dict:
+    if context is None:
+        return failure("UNAUTHORIZED", "请先登录")
+    return get_order_store().eligibility(context.user_id, order_id)
 
-    if order["status"] == "refund_processing":
-        return {"success": False, "error": "该订单已有退款申请正在处理中，请耐心等待"}
 
-    if order["status"] == "pending":
-        return {
-            "success": True,
-            "message": (
-                f"订单 {order_id} 尚未发货，已直接取消并发起退款。"
-                f"退款原因：{reason}。退款将在 1-3 个工作日内原路退回。"
-            ),
-        }
+def preview_refund(order_id: str, reason: str, *, context: ToolContext | None = None) -> dict:
+    if context is None:
+        return failure("UNAUTHORIZED", "请先登录")
+    return get_order_store().preview_refund(context.user_id, order_id, reason)
 
-    return {
-        "success": True,
-        "message": (
-            f"退款申请已提交。订单 {order_id}，退款原因：{reason}。"
-            f"预计 1-3 个工作日内审核完成，届时会通知您退货地址。"
-        ),
-    }
+
+def apply_refund(
+    preview_token: str, idempotency_key: str, *, context: ToolContext | None = None,
+) -> dict:
+    if context is None:
+        return failure("UNAUTHORIZED", "请先登录")
+    return get_order_store().apply_refund(context.user_id, preview_token, idempotency_key)
+
+
+def get_refund_status(
+    application_id: str = "", idempotency_key: str = "", *, context: ToolContext | None = None,
+) -> dict:
+    if context is None:
+        return failure("UNAUTHORIZED", "请先登录")
+    return get_order_store().refund_status(context.user_id, application_id, idempotency_key)

@@ -19,6 +19,11 @@
 
 import sys
 from pathlib import Path
+import pytest
+
+# Legacy manual scenario needs a separately started server and model credentials.
+# The automated, self-contained MCP transport/security suite is test_mcp_requirements.py.
+pytestmark = pytest.mark.skip(reason="手动端到端脚本；自动化 MCP 验证见 test_mcp_requirements.py")
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -27,11 +32,17 @@ from app.mcp_client import MCPClient  # noqa: E402
 from app.agent.tools.manager import ToolManager  # noqa: E402
 from app.agent.chat import EcomAgent  # noqa: E402
 from app.schemas.response import CustomerServiceResponse, IntentType  # noqa: E402
+from app.agent.tools.context import ToolContext, issue_context_token  # noqa: E402
 
 MCP_URL = "http://127.0.0.1:9123/mcp"
 TEST_SESSION = str(ROOT / "app" / "sessions" / "test_mcp_session.json")
 
-EXPECTED_TOOLS = {"query_order", "query_product", "query_logistics", "apply_refund"}
+EXPECTED_TOOLS = {
+    "query_order", "query_product", "query_logistics", "apply_refund",
+    "search_knowledge", "list_user_orders", "get_return_eligibility",
+    "preview_refund", "get_refund_status",
+    "search_products",
+}
 
 
 def _ok(msg: str):
@@ -63,8 +74,8 @@ def test_mcp_connection():
     client = MCPClient(MCP_URL)
     try:
         tools = client.connect()
-        if len(tools) != 4:
-            _fail(f"期望 4 个工具，实际发现 {len(tools)} 个")
+        if len(tools) != len(EXPECTED_TOOLS):
+            _fail(f"期望 {len(EXPECTED_TOOLS)} 个工具，实际发现 {len(tools)} 个")
         tool_names = {t["function"]["name"] for t in tools}
         if tool_names != EXPECTED_TOOLS:
             _fail(f"工具名称不匹配: {tool_names}")
@@ -90,7 +101,7 @@ def test_schema_conversion():
             params = func.get("parameters", {})
             if params.get("type") != "object":
                 _fail(f"工具 {func['name']} parameters.type 不是 object")
-            if not params.get("properties"):
+            if "properties" not in params:
                 _fail(f"工具 {func['name']} 缺少 parameters.properties")
         _ok("所有工具 schema 符合 OpenAI function calling 格式")
     finally:
@@ -105,7 +116,7 @@ def test_mcp_tool_call():
         client.connect()
 
         import json
-        result = client.call_tool("query_order", {"order_id": "ORD-20240115-001"})
+        result = client.call_tool("query_order", {"order_id": "ORD-20240115-001", "auth_token": issue_context_token(ToolContext("user-a"))})
         data = json.loads(result)
         if not data.get("success"):
             _fail(f"查询订单失败: {data}")
@@ -126,11 +137,11 @@ def test_mcp_tool_call():
 # ---------- 测试 4：ToolManager 统一调度（MCP 模式）----------
 def test_tool_manager_mcp():
     print("\n[4/7] ToolManager 统一调度（MCP 模式）")
-    manager = ToolManager(use_mcp=True, mcp_server_url=MCP_URL)
+    manager = ToolManager(use_mcp=True, mcp_server_url=MCP_URL, user_id="user-a")
     try:
         defs = manager.tool_definitions
-        if len(defs) != 4:
-            _fail(f"期望 4 个工具定义，实际 {len(defs)}")
+        if len(defs) != 12:
+            _fail(f"期望 12 个工具定义，实际 {len(defs)}")
         _ok(f"ToolManager 加载了 {len(defs)} 个工具")
 
         import json
@@ -146,12 +157,12 @@ def test_tool_manager_mcp():
 # ---------- 测试 5：ToolManager 降级（本地模式）----------
 def test_tool_manager_local():
     print("\n[5/7] ToolManager 降级（本地模式）")
-    manager = ToolManager(use_mcp=False)
+    manager = ToolManager(use_mcp=False, user_id="user-a")
     try:
         defs = manager.tool_definitions
-        if len(defs) != 4:
-            _fail(f"期望 4 个工具定义，实际 {len(defs)}")
-        _ok("本地模式加载 4 个工具")
+        if len(defs) != 12:
+            _fail(f"期望 12 个工具定义，实际 {len(defs)}")
+        _ok("本地模式加载 12 个工具")
 
         import json
         result = manager.execute_tool("query_order", {"order_id": "ORD-20240115-001"})
@@ -167,9 +178,9 @@ def test_tool_manager_local():
 def test_agent_mcp_order():
     print("\n[6/7] 完整 Agent + MCP 端到端（订单查询）")
     _clean()
-    agent = EcomAgent(session_path=TEST_SESSION)
+    agent = EcomAgent(session_path=TEST_SESSION, user_id="user-a")
     agent.tool_manager.close()
-    agent.tool_manager = ToolManager(use_mcp=True, mcp_server_url=MCP_URL)
+    agent.tool_manager = ToolManager(use_mcp=True, mcp_server_url=MCP_URL, user_id="user-a")
     agent.history_threshold = 30
 
     try:
@@ -191,9 +202,9 @@ def test_agent_mcp_order():
 def test_agent_mcp_product():
     print("\n[7/7] 完整 Agent + MCP 端到端（商品搜索）")
     _clean()
-    agent = EcomAgent(session_path=TEST_SESSION)
+    agent = EcomAgent(session_path=TEST_SESSION, user_id="user-a")
     agent.tool_manager.close()
-    agent.tool_manager = ToolManager(use_mcp=True, mcp_server_url=MCP_URL)
+    agent.tool_manager = ToolManager(use_mcp=True, mcp_server_url=MCP_URL, user_id="user-a")
     agent.history_threshold = 30
 
     try:

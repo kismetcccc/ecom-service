@@ -5,14 +5,13 @@
 2. 短期记忆 prompt 注入 — STM 事实应出现在构建的 prompt 中
 3. 短期记忆会话持久化 — save/load 后 STM 事实应恢复
 4. 短期记忆 reset — reset 后 STM 应清空
-5. 长期记忆提取与持久化 — consolidate 后 LTM JSON 文件应存在且格式正确
+5. 长期记忆提取与持久化 — consolidate 后加密 SQLite 状态应存在
 6. 长期记忆跨会话加载 — 新建 agent 后 LTM 事实应被注入 prompt
 7. recall_user_memory 工具 — 调用工具应返回 STM + LTM 事实
 
 用法：python3 tests/test_memory.py
 """
 
-import json
 import shutil
 import sys
 from pathlib import Path
@@ -23,11 +22,21 @@ sys.path.insert(0, str(ROOT))
 from app.agent.chat import EcomAgent  # noqa: E402
 from app.agent.storage import load_session, save_session  # noqa: E402
 from app.agent.memory import MemoryManager, ShortTermMemory, LongTermMemory  # noqa: E402
+from app.agent.memory.extraction import _build_transcript  # noqa: E402
 from app.agent.tools.memory_tool import recall_user_memory, set_memory_manager  # noqa: E402
 
 TEST_SESSION = str(ROOT / "app" / "sessions" / "test_memory_session.json")
 TEST_MEMORY_DIR = str(ROOT / "app" / "sessions" / "test_memory")
 TEST_USER_ID = "test_user_memory"
+
+
+def test_control_commands_are_excluded_from_memory_transcript():
+    transcript = _build_transcript([
+        {"role": "user", "content": "memory"},
+        {"role": "user", "content": "我喜欢蓝色"},
+    ])
+    assert "memory" not in transcript
+    assert "我喜欢蓝色" in transcript
 
 
 def _clean():
@@ -68,6 +77,8 @@ def _make_agent(threshold: int = 30, keep: int = 6) -> EcomAgent:
         memory_dir=TEST_MEMORY_DIR,
         memory_enabled=True,
         max_ltm_facts=50,
+        require_consent=False,
+        consent_db_path=str(Path(TEST_MEMORY_DIR) / "consent.db"),
     )
     set_memory_manager(agent.memory_manager)
     return agent
@@ -85,12 +96,12 @@ def test_stm_extraction():
     if len(stm_facts) > 0:
         _ok(f"STM 提取到 {len(stm_facts)} 条事实")
         for f in stm_facts:
-            print(f"     - {f}")
+            print(f"     - [{f.category}] {f.content}")
     else:
         _fail("STM 未提取到任何事实")
 
     keywords = ["张三", "钻石", "红色", "运动鞋"]
-    facts_text = " ".join(stm_facts).lower()
+    facts_text = " ".join(f.content for f in stm_facts).lower()
     found = sum(1 for kw in keywords if kw in facts_text)
     if found >= 2:
         _ok(f"事实中包含 {found}/{len(keywords)} 个预期关键词")
@@ -173,25 +184,21 @@ def test_ltm_extraction():
         agent.raw_messages, agent.summary,
     )
 
-    memory_path = Path(TEST_MEMORY_DIR) / f"{TEST_USER_ID}.json"
-    if not memory_path.exists():
-        _fail(f"LTM 文件未生成: {memory_path}")
+    memory_path = Path(TEST_MEMORY_DIR) / "memory.db"
+    if not memory_path.exists() or not agent.memory_manager.ltm.exists():
+        _fail(f"LTM SQLite 状态未生成: {memory_path}")
 
-    with memory_path.open("r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    if "facts" not in data or "interaction_summaries" not in data:
-        _fail("LTM JSON 缺少 facts 或 interaction_summaries 字段")
-
-    if len(data["facts"]) > 0:
-        _ok(f"LTM 提取到 {len(data['facts'])} 条事实")
-        for f in data["facts"][:3]:
-            print(f"     - [{f['category']}] {f['content']}")
+    facts = agent.memory_manager.ltm.facts
+    summaries = agent.memory_manager.ltm.interaction_summaries
+    if facts:
+        _ok(f"LTM 提取到 {len(facts)} 条事实")
+        for fact in facts[:3]:
+            print(f"     - [{fact.category}] {fact.content}")
     else:
         print("  ⚠️  LTM 未提取到事实（可能因对话内容不够丰富）")
 
-    if data["interaction_summaries"]:
-        _ok(f"交互摘要: {data['interaction_summaries'][-1]['summary']}")
+    if summaries:
+        _ok(f"交互摘要: {summaries[-1]['summary']}")
     else:
         print("  ⚠️  未生成交互摘要")
 

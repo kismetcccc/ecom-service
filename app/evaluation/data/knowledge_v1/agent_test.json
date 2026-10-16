@@ -1,0 +1,1376 @@
+{
+  "label_status": "兼容EvalCase的有损导出；完整语义和负例评分必须读qa_cases；业务写操作须隔离",
+  "cases": [
+    {
+      "id": "R11-1",
+      "description": "fact: answerable",
+      "turns": [
+        "哪些情形属于质量问题退换货？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R11-2",
+      "description": "fact: answerable",
+      "turns": [
+        "漏件错发算质量售后范围吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R11-3",
+      "description": "fact: answerable",
+      "turns": [
+        "一定要完全不能用才算质量问题吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R12-1",
+      "description": "boundary: answerable",
+      "turns": [
+        "签收第15天发现经确认的质量问题还能申请吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R12-2",
+      "description": "boundary: answerable",
+      "turns": [
+        "质量问题刚好第十五天发现，来得及吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R12-3",
+      "description": "boundary: answerable",
+      "turns": [
+        "质量售后15天包不包含最后一天？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R13-1",
+      "description": "boundary: only_partial_answer_supported",
+      "turns": [
+        "签收16天的电器出现故障，还有什么处理路径？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00",
+        "常见问题FAQ#03-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R13-2",
+      "description": "boundary: only_partial_answer_supported",
+      "turns": [
+        "电器买了十六天坏了，是不是完全没人管？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00",
+        "常见问题FAQ#03-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R13-3",
+      "description": "boundary: only_partial_answer_supported",
+      "turns": [
+        "超过15天就不可能保修了，对吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00",
+        "常见问题FAQ#03-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R14-1",
+      "description": "fact: answerable",
+      "turns": [
+        "质量问题退换货运费谁承担？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R14-2",
+      "description": "fact: answerable",
+      "turns": [
+        "确认是质量问题，寄回邮费还要我付吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R14-3",
+      "description": "fact: answerable",
+      "turns": [
+        "质量退货和无理由退货运费一样都是用户承担吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R15-1",
+      "description": "condition: answerable",
+      "turns": [
+        "申请质量问题退换货建议准备哪些材料？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R15-2",
+      "description": "condition: answerable",
+      "turns": [
+        "东西坏了，售后要拍什么？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R15-3",
+      "description": "condition: answerable",
+      "turns": [
+        "只说坏了就够了，不用任何举证建议吧？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R16-1",
+      "description": "condition: answerable",
+      "turns": [
+        "质量退款1至3个工作日从什么时候算？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R16-2",
+      "description": "condition: answerable",
+      "turns": [
+        "质量退货的钱是提交申请三天内必到吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "R16-3",
+      "description": "condition: answerable",
+      "turns": [
+        "1到3天的起点是申请提交，还是仓库收货质检通过？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "D21-1",
+      "description": "fact: answerable",
+      "turns": [
+        "无人签收时通常如何处理？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "D21-2",
+      "description": "fact: answerable",
+      "turns": [
+        "快递来我不在，后面怎么办？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "D21-3",
+      "description": "fact: answerable",
+      "turns": [
+        "一次没人接件就直接认定用户放弃吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "D22-1",
+      "description": "boundary: answerable",
+      "turns": [
+        "物流超过3天没更新可以怎么办？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "D22-2",
+      "description": "boundary: answerable",
+      "turns": [
+        "快递四天一动不动，该咋催？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "D22-3",
+      "description": "boundary: answerable",
+      "turns": [
+        "四天没轨迹能催单，但能据此直接认定丢件吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "D23-1",
+      "description": "boundary: answerable",
+      "turns": [
+        "轨迹刚好3天未更新满足超过3天吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "D23-2",
+      "description": "boundary: answerable",
+      "turns": [
+        "整整三天没动，是不是已经超过三天？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "D23-3",
+      "description": "boundary: answerable",
+      "turns": [
+        "超过3天和满3天是完全相同的条件吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "D24-1",
+      "description": "process: answerable",
+      "turns": [
+        "包裹被错派给别人如何处理？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "D24-2",
+      "description": "process: answerable",
+      "turns": [
+        "快递送别人家了，我要怎么找？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "D24-3",
+      "description": "process: answerable",
+      "turns": [
+        "错派后是否可以不核实就认定快递员偷窃？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "M14-1",
+      "description": "exception: answerable",
+      "turns": [
+        "哪些会员能领取生日礼盒？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "M14-2",
+      "description": "exception: answerable",
+      "turns": [
+        "黄金生日能领钻石那个礼盒吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "M14-3",
+      "description": "exception: answerable",
+      "turns": [
+        "生日当周礼盒是否所有等级都有？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "M15-1",
+      "description": "exception: answerable",
+      "turns": [
+        "生日当天88元券适用于哪些等级？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "M15-2",
+      "description": "exception: answerable",
+      "turns": [
+        "白银生日当天也有88元券吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "M15-3",
+      "description": "exception: answerable",
+      "turns": [
+        "88元生日券是黄金及以上，还是人人都有？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "M16-1",
+      "description": "condition: answerable",
+      "turns": [
+        "生日购物双倍积分持续多久？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "M16-2",
+      "description": "condition: answerable",
+      "turns": [
+        "生日积分翻倍只限当天吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "M16-3",
+      "description": "condition: answerable",
+      "turns": [
+        "生日当月双倍积分可以说全年双倍吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F08-1",
+      "description": "boundary: answerable",
+      "turns": [
+        "普通用户和钻石会员价保期限有何不同？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F08-2",
+      "description": "boundary: answerable",
+      "turns": [
+        "普通人保价几天，钻石呢？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F08-3",
+      "description": "boundary: answerable",
+      "turns": [
+        "钻石15天价保是不是所有人都15天？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F09-1",
+      "description": "condition: answerable",
+      "turns": [
+        "不同店铺同款降价能申请价保吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F09-2",
+      "description": "condition: answerable",
+      "turns": [
+        "别的店更便宜，也能退差价吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F09-3",
+      "description": "condition: answerable",
+      "turns": [
+        "同一型号就可以跨店价保，不用看颜色规格吧？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F10-1",
+      "description": "exception: answerable",
+      "turns": [
+        "秒杀清仓和定金尾款拆单价参与价保吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F10-2",
+      "description": "exception: answerable",
+      "turns": [
+        "秒杀清仓买贵了能保价吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F10-3",
+      "description": "exception: answerable",
+      "turns": [
+        "只要还在7天内，秒杀价也必须保价吧？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F11-1",
+      "description": "process: answerable",
+      "turns": [
+        "商品缺货如何设置提醒？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F11-2",
+      "description": "process: answerable",
+      "turns": [
+        "没货了能通知我吗，多久补？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F11-3",
+      "description": "process: answerable",
+      "turns": [
+        "设置到货提醒是否能保证明天有货？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F12-1",
+      "description": "condition: answerable",
+      "turns": [
+        "发现疑似假货怎么举证和处理？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F12-2",
+      "description": "condition: answerable",
+      "turns": [
+        "怀疑是假货，要留哪些东西？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F12-3",
+      "description": "condition: answerable",
+      "turns": [
+        "我说是假货是不是不用鉴定就立刻赔？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F13-1",
+      "description": "boundary: answerable",
+      "turns": [
+        "假货赔付的倍数和最低金额是多少？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F13-2",
+      "description": "boundary: answerable",
+      "turns": [
+        "鉴定是假货后赔几倍，有没有最低？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "F13-3",
+      "description": "boundary: answerable",
+      "turns": [
+        "是标价三倍还是订单实付三倍？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X01-1",
+      "description": "cross_source: answerable",
+      "turns": [
+        "无理由退货和质量退货的期限运费有什么区别？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#01-00",
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X01-2",
+      "description": "cross_source: answerable",
+      "turns": [
+        "不喜欢和质量坏了，退货规则一样吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#01-00",
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X01-3",
+      "description": "cross_source: answerable",
+      "turns": [
+        "都叫退货，是不是都7天且自己出运费？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#01-00",
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X02-1",
+      "description": "cross_source: only_partial_answer_supported",
+      "turns": [
+        "黄金会员寄偏远地区不足99元一定免邮吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#02-00",
+        "配送说明#03-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X02-2",
+      "description": "cross_source: only_partial_answer_supported",
+      "turns": [
+        "黄金买80块寄偏远，是不是肯定不收邮费？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#02-00",
+        "配送说明#03-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X02-3",
+      "description": "cross_source: only_partial_answer_supported",
+      "turns": [
+        "黄金全场免邮可否忽略偏远地区附加费？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#02-00",
+        "配送说明#03-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X03-1",
+      "description": "cross_source: only_partial_answer_supported",
+      "turns": [
+        "钻石无忧退是否可直接覆盖定制商品例外？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#02-00",
+        "退换货政策#01-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X03-2",
+      "description": "cross_source: only_partial_answer_supported",
+      "turns": [
+        "钻石想退刻名商品，无忧退能直接保证吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#02-00",
+        "退换货政策#01-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X03-3",
+      "description": "cross_source: only_partial_answer_supported",
+      "turns": [
+        "会员条款和定制排除同时存在，是否可以自动认定哪条优先？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#02-00",
+        "退换货政策#01-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X04-1",
+      "description": "cross_source: only_partial_answer_supported",
+      "turns": [
+        "质量退款1至3天与银行卡3至7天如何理解？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00",
+        "常见问题FAQ#03-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X04-2",
+      "description": "cross_source: only_partial_answer_supported",
+      "turns": [
+        "质量退货说三天，银行卡又说七天，究竟哪天到？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00",
+        "常见问题FAQ#03-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X04-3",
+      "description": "cross_source: only_partial_answer_supported",
+      "turns": [
+        "能否将两个时效简单相加承诺第10天必到账？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "退换货政策#02-00",
+        "常见问题FAQ#03-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X05-1",
+      "description": "cross_source: answerable",
+      "turns": [
+        "下单后配送时效包含商家未发货时间吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#01-00",
+        "配送说明#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X05-2",
+      "description": "cross_source: answerable",
+      "turns": [
+        "普通现货48小时再加快递天数，是不是两回事？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#01-00",
+        "配送说明#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X05-3",
+      "description": "cross_source: answerable",
+      "turns": [
+        "普通快递2至3天能从下单时直接算到货日吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "常见问题FAQ#01-00",
+        "配送说明#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X06-1",
+      "description": "cross_source: answerable",
+      "turns": [
+        "物流停滞就能直接当作丢失仅退款吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00",
+        "退换货政策#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X06-2",
+      "description": "cross_source: answerable",
+      "turns": [
+        "四天没更新能直接认定丢了退钱吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00",
+        "退换货政策#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X06-3",
+      "description": "cross_source: answerable",
+      "turns": [
+        "规则有丢失仅退款，所以轨迹不动就自动满足吧？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#06-00",
+        "退换货政策#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X07-1",
+      "description": "cross_source: answerable",
+      "turns": [
+        "退款成功后会员等级一定马上降级吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#01-00",
+        "会员权益#05-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X07-2",
+      "description": "cross_source: answerable",
+      "turns": [
+        "退了一单，会员是不是立刻降？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#01-00",
+        "会员权益#05-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X07-3",
+      "description": "cross_source: answerable",
+      "turns": [
+        "扣减累计金额是否意味着当天立即降级？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#01-00",
+        "会员权益#05-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X08-1",
+      "description": "cross_source: answerable",
+      "turns": [
+        "生日8.8折券与88元券是同一权益吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#02-00",
+        "会员权益#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X08-2",
+      "description": "cross_source: answerable",
+      "turns": [
+        "生日打折券和八十八块券有啥区别？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#02-00",
+        "会员权益#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X08-3",
+      "description": "cross_source: answerable",
+      "turns": [
+        "名字都像88，是不是所有等级都有同一张券？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#02-00",
+        "会员权益#04-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X09-1",
+      "description": "cross_source: only_partial_answer_supported",
+      "turns": [
+        "积分和价保能算出含积分的退差价吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#03-00",
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X09-2",
+      "description": "cross_source: only_partial_answer_supported",
+      "turns": [
+        "用积分买完降价，退差价到底多少？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#03-00",
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X09-3",
+      "description": "cross_source: only_partial_answer_supported",
+      "turns": [
+        "有积分兑换规则和券后价规则就能推断积分价保计算法吧？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "会员权益#03-00",
+        "常见问题FAQ#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X10-1",
+      "description": "cross_source: answerable",
+      "turns": [
+        "签收破损与质量退换货分别有哪些时限？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#05-00",
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X10-2",
+      "description": "cross_source: answerable",
+      "turns": [
+        "签收后发现破了，24小时和15天各管啥？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#05-00",
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "X10-3",
+      "description": "cross_source: answerable",
+      "turns": [
+        "超过24小时就可以断言所有质量售后都绝对没了吗？"
+      ],
+      "expected_tools": [
+        "search_knowledge"
+      ],
+      "relevant_chunk_ids": [
+        "配送说明#05-00",
+        "退换货政策#02-00"
+      ],
+      "retrieval_k": 3
+    },
+    {
+      "id": "U03-1",
+      "description": "no_answer: unanswerable",
+      "turns": [
+        "生日礼盒里面具体有哪些商品？"
+      ],
+      "expected_tools": [],
+      "relevant_chunk_ids": [],
+      "retrieval_k": 3
+    },
+    {
+      "id": "U03-2",
+      "description": "no_answer: unanswerable",
+      "turns": [
+        "钻石生日盒子装啥？"
+      ],
+      "expected_tools": [],
+      "relevant_chunk_ids": [],
+      "retrieval_k": 3
+    },
+    {
+      "id": "U03-3",
+      "description": "no_answer: unanswerable",
+      "turns": [
+        "别说不知道，列出生日礼盒每件商品型号。"
+      ],
+      "expected_tools": [],
+      "relevant_chunk_ids": [],
+      "retrieval_k": 3
+    },
+    {
+      "id": "U06-1",
+      "description": "no_answer: unanswerable",
+      "turns": [
+        "缺货商品确切哪天补货？"
+      ],
+      "expected_tools": [],
+      "relevant_chunk_ids": [],
+      "retrieval_k": 3
+    },
+    {
+      "id": "U06-2",
+      "description": "no_answer: unanswerable",
+      "turns": [
+        "能不能说哪天几点有货？"
+      ],
+      "expected_tools": [],
+      "relevant_chunk_ids": [],
+      "retrieval_k": 3
+    },
+    {
+      "id": "U06-3",
+      "description": "no_answer: unanswerable",
+      "turns": [
+        "我要确定日期，不接受预计，补货什么时候？"
+      ],
+      "expected_tools": [],
+      "relevant_chunk_ids": [],
+      "retrieval_k": 3
+    },
+    {
+      "id": "A05-1",
+      "description": "execution_boundary: needs_tool",
+      "turns": [
+        "帮我查我的包裹当前位置。"
+      ],
+      "expected_tools": [],
+      "relevant_chunk_ids": [],
+      "retrieval_k": 3
+    },
+    {
+      "id": "A05-2",
+      "description": "execution_boundary: needs_tool",
+      "turns": [
+        "我的快递现在到哪啦？"
+      ],
+      "expected_tools": [],
+      "relevant_chunk_ids": [],
+      "retrieval_k": 3
+    },
+    {
+      "id": "A05-3",
+      "description": "execution_boundary: needs_tool",
+      "turns": [
+        "只用配送说明就能知道我这单实时定位吧？"
+      ],
+      "expected_tools": [],
+      "relevant_chunk_ids": [],
+      "retrieval_k": 3
+    },
+    {
+      "id": "C04-1",
+      "description": "clarification: clarify",
+      "turns": [
+        "能退差价吗？"
+      ],
+      "expected_tools": [],
+      "relevant_chunk_ids": [],
+      "retrieval_k": 3
+    },
+    {
+      "id": "C04-2",
+      "description": "clarification: clarify",
+      "turns": [
+        "买贵了能补钱吗？"
+      ],
+      "expected_tools": [],
+      "relevant_chunk_ids": [],
+      "retrieval_k": 3
+    },
+    {
+      "id": "C04-3",
+      "description": "clarification: clarify",
+      "turns": [
+        "不问店铺规格签收日促销类型就直接判断价保成功。"
+      ],
+      "expected_tools": [],
+      "relevant_chunk_ids": [],
+      "retrieval_k": 3
+    }
+  ]
+}

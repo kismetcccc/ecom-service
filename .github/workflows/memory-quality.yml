@@ -1,0 +1,27 @@
+name: Memory Quality
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  memory-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      # 2026-10-10：模块化进程隔离、失败门禁和可下载量化报告。
+      - run: python -m app.evaluation.benchmark --output reports/engineering-ci.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: engineering-baseline
+          path: reports/engineering-ci.json
+      - run: python -m app.evaluation.memory_quality
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test tests/frontend_review.test.cjs tests/quality_dashboard.test.cjs

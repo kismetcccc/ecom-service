@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.pytest-runtime-*/
 *.egg-info/
 dist/
 build/
@@ -30,4 +31,33 @@ env/
 
 # 会话持久化文件
 app/sessions/
-docs/
+# docs 默认不纳入版本控制，仅放行项目正式需求文档。
+docs/*
+!docs/memory需求改进.md
+!docs/mcp需求改进.md
+!docs/rag需求改进.md
+!docs/multi-agent需求改进.md
+!docs/综合审查.md
+!docs/10.10更新-LLMWiki接入与切换.md
+!docs/10.10更新-项目精进与简历深挖.md
+!docs/10.10更新-多Agent简历写法与面试问答.md
+!docs/10.10更新-多Agent工程化升级.md
+!docs/10.10更新-工作流与Wiki升级.md
+!docs/10.10更新-2026-10-10全链路评估与升级.md
+!docs/10.11更新-履约诊断质检故障修复.md
+!docs/10.13更新-Skills治理与优化.md
+!docs/10.13更新-履约证据Skill与简历说明.md
+!docs/10.13更新-退款Skill完整链路与工程化.md
+.tmp/
+reports/*
+!reports/engineering-2026-10-10.json
+
+# Private documentation and local secrets (never commit)
+/docs/
+/cf_docs/
+.env.*
+!.env.example
+*.pem
+*.key
+/pytest-cache-files-*/
+/wiki-test/

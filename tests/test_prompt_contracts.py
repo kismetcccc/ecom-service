@@ -18,9 +18,12 @@ from app.prompts.memory import LTM_EXTRACTION_PROMPT, STM_EXTRACTION_PROMPT
 from app.prompts.response_extraction import STRUCTURED_RESPONSE_PROMPT
 from app.prompts.summarizer import SUMMARY_PROMPT
 from app.multi_agent.router import Router
+from app.prompts.agent_quality import FULFILLMENT_PROMPT, REVIEW_PROMPT
 
 
 ALL_SYSTEM_PROMPTS = {
+    "fulfillment": FULFILLMENT_PROMPT,
+    "quality_review": REVIEW_PROMPT,
     "customer_service": SYSTEM_PROMPT,
     "router": ROUTER_PROMPT,
     "presale": PRESALE_PROMPT,
@@ -45,10 +48,9 @@ def test_every_system_prompt_uses_five_part_contract():
 
 
 def test_sensitive_write_requires_confirmation():
-    assert "二次确认" in SYSTEM_PROMPT
-    assert "明确确认后" in SYSTEM_PROMPT
+    assert "页面“申请退款”入口核对预览并确认" in SYSTEM_PROMPT
     assert "二次确认" in POSTSALE_PROMPT
-    assert "明确确认后" in POSTSALE_PROMPT
+    assert "对话文字不能代替服务端确认凭据" in POSTSALE_PROMPT
 
 
 def test_subagent_permission_boundaries_are_explicit():
@@ -63,7 +65,9 @@ def test_extraction_prompts_remain_formattable():
     LTM_EXTRACTION_PROMPT.format(existing_ltm="（暂无）")
 
 
-def test_router_uses_system_role_and_does_not_duplicate_current_input():
+def test_router_uses_system_role_and_does_not_duplicate_current_input(monkeypatch):
+    from app.config.settings import settings
+    monkeypatch.setattr(settings, "multi_agent_rules_enabled", False)
     captured = {}
 
     class FakeCompletions:
@@ -72,7 +76,7 @@ def test_router_uses_system_role_and_does_not_duplicate_current_input():
             return SimpleNamespace(
                 choices=[
                     SimpleNamespace(
-                        message=SimpleNamespace(content="postsale")
+                        message=SimpleNamespace(content='{"agent":"postsale","intents":["order"],"confidence":0.95,"escalation":false,"risk_level":"low"}')
                     )
                 ]
             )

@@ -4,14 +4,15 @@
   # 默认走 settings.rag_backend
   python app/scripts/build_kb_index.py
 
-  # 显式指定后端，便于一份知识库同时构建两种后端的索引做对比
+  # 显式指定后端，便于一份知识库构建不同后端的索引做对比
   python app/scripts/build_kb_index.py --backend numpy
   python app/scripts/build_kb_index.py --backend chroma
+  python app/scripts/build_kb_index.py --backend qdrant
 
 流程：
   1. 扫描 knowledge/ 下的所有 .md 文件，按二级标题切分。
   2. 调用 OpenAI Embeddings 将每个 chunk 向量化。
-  3. 通过 backend.upsert 持久化索引（NumpyBackend 写 JSON / ChromaBackend 写 PersistentClient）。
+  3. 通过 backend.upsert 持久化索引（JSON / Chroma / Qdrant）。
 """
 
 import argparse
@@ -25,6 +26,8 @@ from app.config.settings import settings  # noqa: E402
 from app.agent.rag.backends import create_backend  # noqa: E402
 from app.agent.rag.chunker import chunk_markdown_dir  # noqa: E402
 from app.agent.rag.embedder import Embedder  # noqa: E402
+from app.agent.rag.embedding_cache import encode_changed  # noqa: E402
+from app.agent.rag.content_guard import validate_publishable  # noqa: E402
 
 
 def _build_backend(name: str):
@@ -39,6 +42,14 @@ def _build_backend(name: str):
             persist_dir=ROOT / settings.chroma_persist_dir,
             collection_name=settings.chroma_collection,
         ), f"{ROOT / settings.chroma_persist_dir} (collection={settings.chroma_collection})"
+    if name == "qdrant":
+        return create_backend(
+            "qdrant",
+            url=settings.qdrant_url,
+            collection_name=settings.qdrant_collection,
+            api_key=settings.qdrant_api_key,
+            timeout=settings.qdrant_timeout_seconds,
+        ), f"{settings.qdrant_url} (alias={settings.qdrant_collection})"
     raise ValueError(f"未知后端: {name}")
 
 
@@ -46,7 +57,7 @@ def main():
     parser = argparse.ArgumentParser(description="构建知识库向量索引")
     parser.add_argument(
         "--backend",
-        choices=["numpy", "chroma"],
+        choices=["numpy", "chroma", "qdrant"],
         default=settings.rag_backend,
         help=f"向量后端（默认: {settings.rag_backend}）",
     )
@@ -69,7 +80,9 @@ def main():
     print("=" * 60)
 
     print("\n[1/3] 扫描并切分 markdown 文档...")
-    chunks = chunk_markdown_dir(kb_dir)
+    chunks = validate_publishable(
+        chunk_markdown_dir(kb_dir), allow_demo=settings.rag_allow_demo_policies
+    )
     if not chunks:
         print("❌ 未发现任何文档，请检查 knowledge/ 目录")
         sys.exit(1)
@@ -88,9 +101,11 @@ def main():
         model=settings.embedding_model,
         batch_size=settings.embedding_batch_size,
     )
-    vectors = embedder.encode([c.text for c in chunks])
+    vectors, newly_encoded = encode_changed(
+        chunks, embedder, ROOT / "app/sessions/kb_embedding_cache.json"
+    )
     dim = len(vectors[0]) if vectors else 0
-    print(f"   完成，向量维度 = {dim}")
+    print(f"   完成，新增向量化 = {newly_encoded}，复用 = {len(chunks) - newly_encoded}，维度 = {dim}")
 
     print(f"\n[3/3] 写入 {args.backend} 索引...")
     backend.upsert(

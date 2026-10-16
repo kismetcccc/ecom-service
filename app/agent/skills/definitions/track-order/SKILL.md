@@ -1,5 +1,6 @@
 ---
 name: track-order
+required-tools: query_order query_logistics list_user_orders
 description: 当用户想查订单状态、物流进度、快递到哪了时使用。提供完整的订单+物流综合信息查询流程。适用关键词：查订单、物流、快递、到哪了、发货了吗、什么时候到。
 ---
 

@@ -14,7 +14,9 @@
 """
 
 import re
-from dataclasses import asdict, dataclass, field
+import hashlib
+import json
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 MAX_CHUNK_CHARS = 1200
@@ -26,6 +28,14 @@ class Chunk:
     doc: str
     section: str
     text: str
+    policy_id: str = ""
+    version: str = "legacy"
+    status: str = "demo"
+    effective_from: str = ""
+    effective_to: str = ""
+    owner: str = ""
+    source_url: str = ""
+    content_hash: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -34,12 +44,18 @@ class Chunk:
 def chunk_markdown_dir(kb_dir: Path) -> list[Chunk]:
     """扫描目录下所有 .md 文件，逐一切分并汇总。"""
     chunks: list[Chunk] = []
+    catalog_path = kb_dir / "policies.json"
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8")) if catalog_path.exists() else {}
     for md_path in sorted(kb_dir.glob("*.md")):
-        chunks.extend(_chunk_one_file(md_path))
+        metadata = catalog.get(md_path.stem)
+        if metadata is None:
+            metadata = {"status": "draft", "version": "unreviewed"}
+        _validate_policy_metadata(md_path.stem, metadata)
+        chunks.extend(_chunk_one_file(md_path, metadata))
     return chunks
 
 
-def _chunk_one_file(md_path: Path) -> list[Chunk]:
+def _chunk_one_file(md_path: Path, metadata: dict | None = None) -> list[Chunk]:
     raw = md_path.read_text(encoding="utf-8")
     doc_name = md_path.stem
     sections = _split_by_h2(raw)
@@ -51,11 +67,11 @@ def _chunk_one_file(md_path: Path) -> list[Chunk]:
             continue
 
         if len(text) <= MAX_CHUNK_CHARS:
-            out.append(_make_chunk(doc_name, section_title, text, idx, 0))
+            out.append(_make_chunk(doc_name, section_title, text, idx, 0, metadata))
             continue
 
         for sub_idx, piece in enumerate(_split_long(text)):
-            out.append(_make_chunk(doc_name, section_title, piece, idx, sub_idx))
+            out.append(_make_chunk(doc_name, section_title, piece, idx, sub_idx, metadata))
     return out
 
 
@@ -109,7 +125,43 @@ def _split_long(text: str) -> list[str]:
     return pieces
 
 
-def _make_chunk(doc: str, section: str, text: str, idx: int, sub_idx: int) -> Chunk:
+def _make_chunk(doc: str, section: str, text: str, idx: int, sub_idx: int, metadata: dict | None = None) -> Chunk:
     chunk_id = f"{doc}#{idx:02d}-{sub_idx:02d}"
     body = f"【{doc} · {section}】\n{text}"
-    return Chunk(chunk_id=chunk_id, doc=doc, section=section, text=body)
+    meta = metadata or {}
+    return Chunk(
+        chunk_id=chunk_id, doc=doc, section=section, text=body,
+        policy_id=str(meta.get("policy_id", "")),
+        version=str(meta.get("version", "unreviewed")),
+        status=str(meta.get("status", "draft")),
+        effective_from=str(meta.get("effective_from", "")),
+        effective_to=str(meta.get("effective_to", "")),
+        owner=str(meta.get("owner", "")),
+        source_url=str(meta.get("source_url", "")),
+        content_hash=hashlib.sha256(body.encode("utf-8")).hexdigest(),
+    )
+
+
+def _validate_policy_metadata(doc: str, metadata: dict) -> None:
+    from datetime import date
+    from urllib.parse import urlsplit
+
+    if not isinstance(metadata, dict):
+        raise ValueError(f"{doc} 的政策元数据必须是对象")
+    status = metadata.get("status")
+    if status not in {"draft", "demo", "published", "retired"}:
+        raise ValueError(f"{doc} 的政策状态无效")
+    if status == "published" and not all(metadata.get(key) for key in (
+        "policy_id", "version", "owner", "source_url", "effective_from"
+    )):
+        raise ValueError(f"{doc} 发布时必须填写政策 ID、版本、责任人、来源和生效日")
+    if status == "published" and urlsplit(str(metadata["source_url"])).scheme != "https":
+        raise ValueError(f"{doc} 的正式政策来源必须使用 HTTPS")
+    start = metadata.get("effective_from")
+    end = metadata.get("effective_to")
+    if start:
+        date.fromisoformat(start)
+    if end:
+        date.fromisoformat(end)
+    if start and end and end < start:
+        raise ValueError(f"{doc} 的失效日早于生效日")

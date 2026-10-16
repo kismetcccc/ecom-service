@@ -29,6 +29,7 @@ def main():
     print(f"  并夕夕 · 智能客服「小飞」({mode})")
     print("  支持工具调用 + 政策检索 + 用户记忆 + 技能编排")
     print("  输入 quit/exit 退出, reset 重置, memory 查看记忆, skills 查看技能")
+    print("  输入 memory on 授权长期记忆, memory off 撤回授权并删除长期记忆")
     print("=" * 50)
     print()
 
@@ -76,7 +77,11 @@ def main():
                 print("\n--- 短期记忆（本次对话）---")
                 if stm.facts:
                     for f in stm.facts:
-                        print(f"  - {f}")
+                        # MR-06：本地终端展示结构化事实，不再输出 dataclass 表示。
+                        print(
+                            f"  - [{f.category}] {f.content} "
+                            f"(来源={f.source}, 置信度={f.confidence:.2f}, 状态={f.status})"
+                        )
                 else:
                     print("  （暂无）")
                 print(f"\n--- 长期记忆（跨会话，用户: {ltm.user_id}）---")
@@ -92,6 +97,13 @@ def main():
                 print()
             else:
                 print("记忆功能未启用\n")
+            continue
+
+        if user_input.lower() in {"memory on", "memory off"}:
+            # MR-12：本地 CLI 也提供明确授权和撤回入口。
+            granted = user_input.lower() == "memory on"
+            agent.memory_manager.set_long_term_consent(granted)
+            print("已授权长期记忆。" if granted else "已撤回授权并删除长期记忆。")
             continue
 
         try:

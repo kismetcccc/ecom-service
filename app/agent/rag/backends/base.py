@@ -23,10 +23,21 @@ from app.agent.rag.chunker import Chunk
 class RetrievedChunk:
     chunk: Chunk
     score: float
+    score_type: str = "dense"
+    dense_score: float | None = None
+    bm25_score: float | None = None
+    rrf_score: float | None = None
+    rerank_score: float | None = None
+    rerank_status: str = "disabled"
 
 
 class VectorBackend(ABC):
     """向量索引后端的统一接口。"""
+
+    def retrieval_snapshot(self, query_vector: list[float], top_k: int,
+                           embedding_model: str) -> tuple[list[RetrievedChunk], list[Chunk]]:
+        """Return dense candidates and the same published corpus for lexical retrieval."""
+        raise NotImplementedError("该后端尚不支持混合检索快照")
 
     @abstractmethod
     def upsert(
@@ -35,9 +46,9 @@ class VectorBackend(ABC):
         vectors: list[list[float]],
         embedding_model: str,
     ) -> None:
-        """全量重建索引（覆盖式）。
+        """发布一次完整索引。
 
-        每次调用都会清空既有数据再写入，避免脏数据。增量更新不在第 5 期范围。
+        重建后旧片段不能继续作为当前结果；后端可用版本化集合保留旧索引以便回滚。
         """
 
     @abstractmethod

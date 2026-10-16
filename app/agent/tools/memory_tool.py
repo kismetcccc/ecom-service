@@ -21,16 +21,27 @@ def recall_memory(manager: MemoryManager | None, query: str = "") -> dict:
     if manager is None or not manager.memory_enabled:
         return {"success": False, "error": "记忆系统未启用"}
 
+    relevant_facts = manager.ltm.retrieve(query)[0] if query else manager.ltm.active_facts
     result: dict = {
         "success": True,
-        "short_term_facts": manager.stm.facts,
+        # MR-06：工具输出保持 JSON 可序列化，并携带事实元数据。
+        "short_term_facts": manager.stm.to_dict()["facts"],
+        # MR-12：未授权时工具也不得旁路读取长期记忆。
         "long_term_facts": [
-            {"content": f.content, "category": f.category}
-            for f in manager.ltm.facts
-        ],
+            {
+                "content": f.content,
+                "category": f.category,
+                "id": f.id,
+                "source": f.source,
+                "confidence": f.confidence,
+                "source_message_id": f.source_message_id,
+            }
+            for f in relevant_facts
+        ] if manager.long_term_consent else [],
+        "long_term_consent": manager.long_term_consent,
     }
 
-    if manager.ltm.interaction_summaries:
+    if manager.long_term_consent and manager.ltm.interaction_summaries:
         result["recent_interactions"] = [
             s["summary"] for s in manager.ltm.interaction_summaries[-3:]
         ]

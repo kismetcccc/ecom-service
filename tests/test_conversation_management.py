@@ -91,8 +91,8 @@ def test_persistence_and_recovery():
         _fail("session.json 未生成")
     _ok("session.json 已落盘")
 
-    raw = json.loads(Path(TEST_SESSION).read_text(encoding="utf-8"))
-    if raw.get("version") != 1:
+    raw = load_session(TEST_SESSION)
+    if raw.get("version") != 2:
         _fail(f"version 字段异常：{raw.get('version')}")
     if len(raw["messages"]) != 4:
         _fail(f"messages 条数预期 4，实际 {len(raw['messages'])}")

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>量化指标评估 · 小飞客服质量评测台</title>
+<style>
+:root{font-family:Inter,"Microsoft YaHei",sans-serif;color:#17312b;background:#f3f6f3;--green:#176448;--muted:#64766d;--line:#dde6df}
+*{box-sizing:border-box}body{margin:0}a{color:var(--green)}button,input{font:inherit}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #c6851c;outline-offset:4px}
+header{background:#fff;border-bottom:1px solid var(--line);padding:22px max(24px,calc((100vw - 1160px)/2));display:flex;justify-content:space-between;gap:20px;align-items:center}
+.brand{font-weight:750;letter-spacing:.02em}.badge{font-size:12px;padding:5px 10px;border:1px solid var(--line);border-radius:20px;color:var(--muted)}main{max-width:1208px;margin:auto;padding:42px 24px}
+.eyebrow{font-size:12px;letter-spacing:.18em;color:var(--green);font-weight:700}h1{font-size:36px;line-height:1.3;margin:12px 0}p{line-height:1.8;color:var(--muted)}.hero{display:grid;grid-template-columns:1.6fr 1fr;gap:36px;margin-bottom:28px}.hero p{max-width:650px}.upload{background:#e6eee8;padding:24px;border-radius:16px;border:1px dashed #8fa99b}.upload label{display:block;font-weight:650;margin-bottom:12px}.upload input{max-width:100%;font-size:13px}.hint{font-size:12px;margin:10px 0 0}.toolbar{display:flex;align-items:center;gap:14px;margin:20px 0;flex-wrap:wrap}.toolbar label{font-size:13px}.toolbar input{font-size:12px;max-width:250px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:24px 0}.card{background:white;border:1px solid var(--line);border-radius:14px;padding:22px}.card span{color:var(--muted);font-size:13px}.card strong{display:block;font-size:30px;margin:14px 0 8px;font-variant-numeric:tabular-nums}.card small{color:var(--muted);line-height:1.6}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:20px}.panel h2{font-size:18px;margin:0 0 18px}.scroll{overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:13px}th{text-align:left;font-weight:500;color:var(--muted);background:#f6f8f5}td,th{padding:16px 12px;border-bottom:1px solid var(--line)}.bar{display:inline-block;width:80px;height:6px;border-radius:4px;background:#e6eee8;margin-right:10px;overflow:hidden}.bar i{display:block;height:100%;background:var(--green)}.notice{border-left:3px solid #c6851c;background:#fff7e6;padding:14px 18px;font-size:13px;line-height:1.8}.empty{text-align:center;padding:45px 20px;color:var(--muted)}.empty b{display:block;color:#17312b;font-size:19px;margin-bottom:10px}.meta{font:12px/1.8 ui-monospace,monospace;word-break:break-all;color:var(--muted)}.error{color:#a02f2a;min-height:22px;font-size:14px}.ok{color:var(--green)}.bad{color:#a02f2a}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}details{margin:12px 0}summary{cursor:pointer}li{line-height:1.8;font-size:13px}footer{font-size:12px;color:var(--muted);padding:10px 0 25px}button{border:1px solid var(--line);background:white;border-radius:6px;padding:7px 12px;cursor:pointer}[hidden]{display:none!important}
+@media(max-width:800px){.hero,.grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}h1{font-size:28px}header{padding:18px 24px}.badge{display:none}main{padding-top:26px}}@media(max-width:420px){.cards{grid-template-columns:1fr}.card strong{font-size:26px}}
+</style>
+</head>
+<body>
+<header><div class="brand">小飞 / 量化指标评估</div><span class="badge">性能 · 质量 · 规模 · 成本 · 稳定性</span><a href="/">返回客服工作台 ↗</a></header>
+<main>
+<section class="hero"><div><div class="eyebrow">QUANTITATIVE EVALUATION</div><h1>用真实测量，<br>回答项目做到了什么。</h1><p>从请求延迟到检索质量，从知识规模到 Token 消耗，统一查看五类量化指标。每个结果保留样本量、测量口径和原始证据。</p></div><div class="upload"><label for="report-file">导入量化评测报告</label><input id="report-file" type="file" accept=".json,application/json"><p class="hint">支持量化汇总、单项测量、工程基线和模型评测 JSON，最大 5 MB。文件仅在本地浏览器解析，不上传。</p></div></section>
+<div id="error" class="error" role="alert"></div>
+<div class="toolbar"><label for="baseline-file">对比历史基线</label><input id="baseline-file" type="file" accept=".json,application/json"><button id="clear" type="button">清除报告</button><span class="badge" id="report-kind">尚未导入</span></div>
+<div id="empty" class="panel empty"><b>从一份可复现的测量开始</b>运行 <code>python -m app.scripts.quantify inventory</code>，导入 <code>reports/quant-inventory.json</code>。<p>已有汇总报告可导入 reports/quant-overview.json。空白指标表示未测，不用示例数字填充。</p></div>
+<section id="quantitative" aria-label="五类量化指标"></section>
+<div id="results" hidden>
+<div class="cards"><div class="card"><span>已通过 / 总样本</span><strong id="count">—</strong><small id="rate">—</small></div><div class="card"><span>评测门禁</span><strong id="gate">—</strong><small>依据当前报告；不是生产认证</small></div><div class="card"><span id="latency-label">耗时</span><strong id="latency">—</strong><small id="latency-note">—</small></div><div class="card"><span>与基线通过率差异</span><strong id="delta">—</strong><small id="delta-note">导入相同口径基线后计算</small></div></div>
+<div class="notice" id="notice"></div>
+<section class="panel" style="margin-top:20px"><h2>分项结果</h2><div class="scroll"><table><thead id="table-head"></thead><tbody id="table-body"></tbody></table></div></section>
+<div class="grid"><section class="panel"><h2>证据与运行信息</h2><div id="metadata" class="meta"></div></section><section class="panel"><h2>未测项与失败样本</h2><ul id="unmeasured"></ul><details><summary>展开失败 / 跳过项</summary><ul id="failures"></ul></details></section></div>
+</div>
+<footer>指标原则：空值表示未测；分母说明覆盖范围；测试耗时不代表客服请求延迟。报告为本地文件，不附带服务端签名。</footer>
+</main>
+<script>
+'use strict';
+function qualityModel(data) {
+  if (!data || typeof data !== 'object') throw new Error('报告必须是 JSON 对象');
+  const finite = n => typeof n === 'number' && Number.isFinite(n) && n >= 0;
+  if(data.report_type === 'quantitative_metrics' && data.schema_version === 1) {
+    if(!Array.isArray(data.metrics)||data.metrics.length>500||!Array.isArray(data.cases))throw new Error('量化报告结构无效');
+    const keys=new Set();
+    for(const m of data.metrics){
+      if(!['performance','quality','scale','cost','stability'].includes(m.category)||typeof m.key!=='string'||typeof m.label!=='string'||typeof m.scope!=='string'||!['ratio','ms','count','rps','tokens','currency'].includes(m.unit)||!(m.value===null||finite(m.value))||!(m.samples===null||(Number.isInteger(m.samples)&&m.samples>=0))||(m.unit==='ratio'&&m.value>1)||keys.has(m.key))throw new Error('量化指标或样本量无效');
+      keys.add(m.key);
+    }
+    return {kind:'quantitative',data,total:0,passed:0,signature:null};
+  }
+  if (data.report_type === 'engineering_contract' && data.schema_version === 1) {
+    if (!Array.isArray(data.suites) || !data.suites.length || data.suites.length > 50) throw new Error('模块列表无效');
+    for (const s of data.suites) {
+      if (!finite(s.tests) || !Number.isInteger(s.tests) || !finite(s.passed) || !Number.isInteger(s.passed) || s.passed > s.tests || !finite(s.wall_ms) || !Array.isArray(s.cases) || s.cases.length !== s.tests) throw new Error('模块计数无效');
+      if (s.cases.some(c => !['passed','failed','error','skipped'].includes(c.status))) throw new Error('样本状态无效');
+      if (s.cases.filter(c => c.status === 'passed').length !== s.passed) throw new Error('样本与通过数不一致');
+    }
+    const total = data.suites.reduce((n,s) => n+s.tests,0), passed = data.suites.reduce((n,s) => n+s.passed,0);
+    const gate = data.suites.every(s => s.status === 'completed' && s.tests > 0 && s.passed === s.tests);
+    return {kind:'engineering', total, passed, gate, latency:data.suites.reduce((n,s)=>n+s.wall_ms,0), data,
+      signature:JSON.stringify([data.test_sha256,...data.suites.map(s=>s.name).sort()])};
+  }
+  if (data.metadata?.report_type === 'live_model_with_fixture_tools') {
+    if (!Array.isArray(data.cases) || !data.summary || data.cases.some(c=>typeof c.passed !== 'boolean')) throw new Error('模型评测结构无效');
+    const total=data.cases.length, passed=data.cases.filter(c=>c.passed).length;
+    return {kind:'live',total,passed,gate:total>0 && total===passed,latency:data.summary.latency_ms?.p95??null,data,
+      signature:JSON.stringify([data.metadata.dataset_sha256,data.metadata.fixtures_sha256,data.metadata.mode,data.metadata.judge_enabled,data.metadata.pass_threshold,data.cases.map(c=>c.case_id).sort()])};
+  }
+  throw new Error('不支持的报告类型或版本');
+}
+function qualityDelta(current, baseline) {
+  if (!baseline || !current.total || !baseline.total) return null;
+  if (current.kind !== baseline.kind || current.signature !== baseline.signature) return null;
+  return 100*(current.passed/current.total-baseline.passed/baseline.total);
+}
+function metricDelta(current,baseline,item){
+  if(current?.kind!=='quantitative'||baseline?.kind!=='quantitative'||current.data.category!==baseline.data.category||current.data.category==='bundle')return null;
+  const a=current.data.metadata||{},b=baseline.data.metadata||{};
+  const fields=current.data.category==='retrieval'?['dataset_sha256','k','backend','embedding_model','index_corpus_version','index_sha256']:null;
+  if(!fields||!a.dataset_sha256||fields.some(k=>JSON.stringify(a[k])!==JSON.stringify(b[k])))return null;
+  const before=baseline.data.metrics.find(m=>m.key===item.key);
+  if(!before||before.unit!==item.unit||before.scope!==item.scope||before.samples!==item.samples||before.value===null||item.value===null)return null;
+  return (item.value-before.value)*(item.unit==='ratio'?100:1);
+}
+const metricGroups=[
+  ['performance','01 / 性能','RPS、P50 / P95 / P99 延迟、首字延迟 TTFT','python -m app.scripts.quantify http --live --user-id bench-user --requests 30 --concurrency 1','需启动后端并设置 ECOM_BENCH_TOKEN；每次请求使用独立会话，会调用模型。当前非流式接口不提供 TTFT。'],
+  ['quality','02 / 质量','任务通过率、Recall@K、MRR、nDCG、bad case 占比','python -m app.scripts.quantify retrieval --live','使用 24 条演示知识开发集；应独立人工复核标签，再扩展盲测集。工程测试通过率不等于回答准确率。'],
+  ['scale','03 / 规模','文档数、切片数、向量数、向量维度、Skill 数量','python -m app.scripts.quantify inventory','从本地源文件与索引读取。生产日活和会话轮次需要真实业务日志。'],
+  ['cost','04 / 效率与成本','Token 总量、单用例 Token、用量采集覆盖率、货币成本','python -m app.scripts.run_eval --live --tool-fixtures fixtures.json --output reports/model.json','fixtures.json 需按工具参数准备；Token 来自模型 usage。货币成本需提供模型单价；成本下降需要同口径前后实验。'],
+  ['stability','05 / 稳定性','请求错误率、模型调用错误率、工程回归通过率','python -m app.evaluation.benchmark','压测错误率只描述本次窗口；99.X% 可用性需要连续监控。工程测试耗时不等于请求延迟。']
+];
+function quantitativeMetrics(model){
+  if(!model)return [];
+  if(model.kind==='quantitative')return model.data.metrics;
+  const m=(category,key,label,value,unit,samples,scope)=>({category,key,label,value,unit,samples,scope});
+  if(model.kind==='engineering')return [m('stability','engineering_pass_rate','工程回归通过率',model.total?model.passed/model.total:null,'ratio',model.total,'离线工程契约；非模型准确率')];
+  const d=model.data,s=d.summary,out=[m('quality','task_pass_rate','评测用例通过率',model.total?model.passed/model.total:null,'ratio',model.total,'隔离 fixture 工具；按报告阈值判定'),m('quality','bad_case_rate','未通过用例占比',model.total?1-model.passed/model.total:null,'ratio',model.total,'规则或裁判未达标及执行异常'),m('performance','case_p95','用例端到端 P95',s.latency_ms?.p95??null,'ms',s.latency_ms?.count??0,'包含失败及多轮用例，非单请求 P95'),m('cost','tokens','已观测 Token',s.total_tokens??null,'tokens',model.total,'仅 Agent 调用；不含 Judge；缺失 usage 时为下界'),m('cost','avg_tokens','单用例 Token',s.avg_tokens_per_case??null,'tokens',model.total,'不是单轮请求成本；不含 Judge'),m('cost','usage','Token 采集覆盖率',s.usage_coverage?.value??null,'ratio',s.usage_coverage?.denominator??0,'有 usage 的模型调用 / 全部调用'),m('stability','errors','用例错误率',s.error_rate?.value??null,'ratio',model.total,'本轮运行和评分异常')];
+  for(const [key,value] of Object.entries(s.metric_averages||{}))out.push(m('quality',key,key,value,'ratio',s.metric_sample_counts?.[key]??null,'按有标签且可计分的样本平均；详见原始报告'));
+  return out;
+}
+if (typeof module !== 'undefined') module.exports={qualityModel,qualityDelta,metricDelta};
+if (typeof document !== 'undefined') {
+  const $=id=>document.getElementById(id); let current=null, baseline=null;
+  const text=(id,value)=>{$(id).textContent=String(value)};
+  const pct=value=>value==null?'未测':(value*100).toFixed(1)+'%';
+  function row(values,header=false) { const tr=document.createElement('tr'); for(const value of values){const td=document.createElement(header?'th':'td');if(header)td.scope='col';td.textContent=String(value);tr.append(td)} return tr; }
+  function renderQuantitative(){
+    const container=$('quantitative');container.replaceChildren();const metrics=quantitativeMetrics(current);
+    for(const [key,title,description,command,note] of metricGroups){
+      const section=document.createElement('section');section.className='panel';
+      const heading=document.createElement('h2');heading.textContent=title;section.append(heading);
+      const intro=document.createElement('p');intro.textContent=description;section.append(intro);
+      const items=metrics.filter(m=>m.category===key);
+      if(items.length){const scroll=document.createElement('div');scroll.className='scroll';const table=document.createElement('table');const head=document.createElement('thead');head.append(row(['指标','实测值','样本量',...(baseline?['与基线差值']:[]),'测量范围'],true));const body=document.createElement('tbody');
+        for(const m of items){const value=m.value===null?'未测':m.unit==='ratio'?pct(m.value):Number(m.value).toLocaleString('zh-CN',{maximumFractionDigits:2})+' '+({count:'',tokens:'tokens',ms:'ms',rps:'req/s',currency:'（报告币种）'}[m.unit]||'');const delta=metricDelta(current,baseline,m);body.append(row([m.label,value,m.samples??'不适用',...(baseline?[delta===null?'口径不匹配 / 不支持对比':(delta>=0?'+':'')+delta.toFixed(2)+(m.unit==='ratio'?' pp':' '+m.unit)]:[]),m.scope]));}table.append(head,body);scroll.append(table);section.append(scroll);
+      }else{const empty=document.createElement('p');empty.textContent='未测 · 导入对应测量报告后显示';section.append(empty);}
+      const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent='如何获得这些指标';const code=document.createElement('code');code.textContent=command;const hint=document.createElement('p');hint.className='hint';hint.textContent=note;details.append(summary,code,hint);section.append(details);container.append(section);
+    }
+    if(current?.kind==='quantitative'){const section=document.createElement('section');section.className='panel';const title=document.createElement('h2');title.textContent='证据与运行信息';const pre=document.createElement('pre');pre.className='meta';pre.style.whiteSpace='pre-wrap';pre.textContent=JSON.stringify({generated_at:current.data.generated_at,metadata:current.data.metadata,unmeasured:current.data.unmeasured,notes:current.data.notes},null,2);section.append(title,pre);const errors=current.data.cases.filter(c=>c.error);if(errors.length){const p=document.createElement('p');p.textContent='失败样本：'+errors.slice(0,100).map(c=>`${c.id}: ${c.error}`).join('；');section.append(p);}container.append(section);}
+  }
+  function render() {
+    renderQuantitative();$('empty').hidden=!!current; $('results').hidden=!current||current.kind==='quantitative'; if(!current)return;
+    if(current.kind==='quantitative'){text('report-kind','量化测量 · '+current.data.metrics.length+' 项指标');return;}
+    const d=current.data, engineering=current.kind==='engineering';
+    text('report-kind',engineering?'工程契约 · 离线':'真实模型 · 隔离工具');text('count',`${current.passed} / ${current.total}`);text('rate',`通过率 ${pct(current.total?current.passed/current.total:null)}`);
+    text('gate',current.gate?'通过':'未通过');$('gate').className=current.gate?'ok':'bad';
+    text('latency-label',engineering?'各模块总运行耗时':'用例端到端 P95');text('latency',current.latency==null?'未测':(current.latency/1000).toFixed(2)+' s');
+    text('latency-note',engineering?'包含 pytest 启动与测试，不是模型延迟':`样本量 ${d.summary.latency_ms?.count??0}；包含失败用例`);
+    const delta=qualityDelta(current,baseline); text('delta',delta==null?'—':`${delta>=0?'+':''}${delta.toFixed(1)} pp`);text('delta-note',!baseline?'导入相同口径基线后计算':delta==null?'报告口径不同或无样本，不计算提升':'同测试 / 数据集口径的描述性差异');
+    text('notice',engineering?'本报告测量工程契约，不代表真实模型准确率。独立进程、临时存储和 HTTP 防误调用不等于操作系统安全沙箱。':'真实模型使用 fixture 工具，不能替代真实业务集成测试。Token 缺失时总量仅为已观测下界；Judge 也可能判断错误。');
+    $('table-head').replaceChildren(row(engineering?['模块','通过 / 样本','通过率','测试 P95','状态']:['指标','均值','有效样本量'],true));
+    $('table-body').replaceChildren();
+    if(engineering) for(const s of d.suites){$('table-body').append(row([s.name,`${s.passed} / ${s.tests}`,pct(s.tests?s.passed/s.tests:null),s.test_duration_ms?.p95==null?'未测':s.test_duration_ms.p95.toFixed(1)+' ms',s.status]));}
+    else {for(const [key,value] of Object.entries(d.summary.metric_averages||{}))$('table-body').append(row([key,pct(value),d.summary.metric_sample_counts?.[key]??'未知']));$('table-body').append(row(['Token 用量完整率',pct(d.summary.usage_coverage?.value),d.summary.usage_coverage?.denominator??0]));}
+    text('metadata',JSON.stringify(engineering?{generated_at:d.generated_at,python:d.python,test_sha256:d.test_sha256,code_sha256:d.code_sha256,isolation:d.isolation}:d.metadata,null,2));$('metadata').style.whiteSpace='pre-wrap';
+    $('unmeasured').replaceChildren();for(const item of d.unmeasured||(engineering?[]:['真实业务工具集成效果','线上生产负载表现'])){const li=document.createElement('li');li.textContent=item;$('unmeasured').append(li)}
+    $('failures').replaceChildren();const failed=engineering?d.suites.flatMap(s=>s.cases.filter(c=>c.status!=='passed').map(c=>`${s.name} / ${c.id} · ${c.status}`)):d.cases.filter(c=>!c.passed).map(c=>`${c.case_id} · ${c.error||'评分未达标'}`);
+    for(const item of failed.slice(0,300)){const li=document.createElement('li');li.textContent=item;$('failures').append(li)}if(!failed.length){const li=document.createElement('li');li.textContent='未发现失败样本；仍需结合未测项判断';$('failures').append(li)}
+  }
+  async function load(event,isBaseline){try{const file=event.target.files[0];if(!file)return;if(file.size>5*1024*1024)throw new Error('文件超过 5 MB');const model=qualityModel(JSON.parse(await file.text()));if(isBaseline)baseline=model;else current=model;text('error','');render()}catch(error){text('error','无法加载：'+error.message)}}
+  $('report-file').addEventListener('change',e=>load(e,false));$('baseline-file').addEventListener('change',e=>load(e,true));$('clear').addEventListener('click',()=>{current=null;baseline=null;$('report-file').value='';$('baseline-file').value='';text('error','');text('report-kind','尚未导入');render()});
+  render();
+}
+</script>
+</body></html>

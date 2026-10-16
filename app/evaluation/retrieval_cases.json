@@ -1,0 +1,29 @@
+{
+  "label_status": "开发者根据演示知识文档编写的开发集，尚未独立人工复核；非盲测集",
+  "cases": [
+    {"id":"return-01","query":"衣服买回来不喜欢，几天内能退？","relevant_chunk_ids":["退换货政策#01-00"]},
+    {"id":"return-02","query":"已经刻了名字的鞋可以无理由退吗？","relevant_chunk_ids":["退换货政策#01-00"]},
+    {"id":"return-03","query":"收到的电器有故障，退货邮费由谁出，需要什么证明？","relevant_chunk_ids":["退换货政策#02-00"]},
+    {"id":"return-04","query":"申请退款后审核一般要等多久？","relevant_chunk_ids":["退换货政策#03-00"]},
+    {"id":"return-05","query":"一个订单买了好几件，能不能只退其中一件？","relevant_chunk_ids":["退换货政策#04-00"]},
+    {"id":"return-06","query":"快递还没签收就拒收了，钱多久回来？","relevant_chunk_ids":["退换货政策#04-00"]},
+    {"id":"delivery-01","query":"你们可以直接寄到香港吗？","relevant_chunk_ids":["配送说明#01-00"]},
+    {"id":"delivery-02","query":"发到县城普通快递通常需要几天？","relevant_chunk_ids":["配送说明#02-00"]},
+    {"id":"delivery-03","query":"买了八十元的东西，普通运费多少？","relevant_chunk_ids":["配送说明#03-00"]},
+    {"id":"delivery-04","query":"下单时可以指定用顺丰吗？","relevant_chunk_ids":["配送说明#04-00"]},
+    {"id":"delivery-05","query":"包裹放在丰巢，我多长时间内要取走？","relevant_chunk_ids":["配送说明#05-00"]},
+    {"id":"delivery-06","query":"物流四天没更新了能催一下吗？","relevant_chunk_ids":["配送说明#06-00"]},
+    {"id":"member-01","query":"一年要买多少钱才能成为黄金会员？","relevant_chunk_ids":["会员权益#01-00"]},
+    {"id":"member-02","query":"白银会员上门取件费用有优惠吗？","relevant_chunk_ids":["会员权益#02-00"]},
+    {"id":"member-03","query":"积分可以抵多少现金，会过期吗？","relevant_chunk_ids":["会员权益#03-00"]},
+    {"id":"member-04","query":"生日当天黄金会员能领什么券？","relevant_chunk_ids":["会员权益#04-00"]},
+    {"id":"member-05","query":"会员每年要交年费吗？","relevant_chunk_ids":["会员权益#05-00"]},
+    {"id":"member-06","query":"订单退款之后会影响会员升级的累计消费吗？","relevant_chunk_ids":["会员权益#05-00"]},
+    {"id":"faq-01","query":"已经发货的订单还能改地址吗？","relevant_chunk_ids":["常见问题FAQ#01-00"]},
+    {"id":"faq-02","query":"能不能货到付款？","relevant_chunk_ids":["常见问题FAQ#01-00"]},
+    {"id":"faq-03","query":"刚买完就降价了，有保价吗？","relevant_chunk_ids":["常见问题FAQ#02-00"]},
+    {"id":"faq-04","query":"银行卡支付的退款一般多久到？","relevant_chunk_ids":["常见问题FAQ#03-00"]},
+    {"id":"faq-05","query":"账户被别人盗用了应该怎么办？","relevant_chunk_ids":["常见问题FAQ#04-00"]},
+    {"id":"faq-06","query":"手机坏了还在保修期，要寄回你们仓库吗？","relevant_chunk_ids":["常见问题FAQ#03-00"]}
+  ]
+}

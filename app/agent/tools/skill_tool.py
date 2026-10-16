@@ -20,8 +20,8 @@ def set_skill_manager(manager: SkillManager) -> None:
     _skill_manager = manager
 
 
-def load_skill(skill_name: str) -> dict:
+def load_skill(skill_name: str, resource: str = "") -> dict:
     """加载指定技能的完整指令。Agent 调用后按指令处理用户问题。"""
     if _skill_manager is None:
         return {"success": False, "error": "技能系统未启用"}
-    return _skill_manager.load_skill(skill_name)
+    return _skill_manager.load_skill(skill_name, resource=resource)

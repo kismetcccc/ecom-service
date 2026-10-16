@@ -1,0 +1,325 @@
+{
+  "会员权益#01-00": {
+    "sha256": "568a9ab0bd468f9e89a4c5422dc3e71a2523b738efa0a0086927b3bf63597c86",
+    "chunk": {
+      "chunk_id": "会员权益#01-00",
+      "doc": "会员权益",
+      "section": "一、会员等级体系",
+      "text": "【会员权益 · 一、会员等级体系】\n「并夕夕」会员分为四级：注册会员、白银会员、黄金会员、钻石会员。等级根据近 12 个月内累计实付金额自动升降，每月 1 号结算。\n\n| 等级 | 升级门槛（近 12 个月实付） | 维持门槛 |\n|------|----------------------------|----------|\n| 注册会员 | 完成手机注册 | — |\n| 白银会员 | 累计 1,000 元 | 维持 800 元/年 |\n| 黄金会员 | 累计 5,000 元 | 维持 4,000 元/年 |\n| 钻石会员 | 累计 20,000 元 | 维持 15,000 元/年 |",
+      "policy_id": "membership-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "5c652106d8b9500b4c784dabdb07ba54b98ce83fd77147e0c97fe9bb46fe5d9a"
+    }
+  },
+  "会员权益#02-00": {
+    "sha256": "47a136ff27c0144a143185d159c9221bf82d93111907d9fd3eca6cc0ad05551c",
+    "chunk": {
+      "chunk_id": "会员权益#02-00",
+      "doc": "会员权益",
+      "section": "二、各等级核心权益",
+      "text": "【会员权益 · 二、各等级核心权益】\n### 2.1 注册会员\n- 新人专享 30 元无门槛券（注册 7 天内有效）。\n- 生日当月一张 8.8 折券（上限 50 元）。\n\n### 2.2 白银会员\n- 每月 1 张满 99-10 元优惠券。\n- 客服优先排队（普通通道前 30%）。\n- 退换货上门取件费减免 50%。\n\n### 2.3 黄金会员\n- 每月 1 张满 199-30 元优惠券、1 张满 99-10 元券。\n- 全场免邮（不含偏远地区，与店铺规则叠加）。\n- 退换货上门取件免费。\n- 专属客服直通通道。\n\n### 2.4 钻石会员\n- 每月 1 张满 499-80、1 张满 199-30、1 张满 99-10 元券。\n- **全场包邮（含偏远地区）**。\n- 优先发货（24 小时内出库）。\n- 一年 4 次「无忧退」（无需任何理由直接退款，运费全免）。\n- 专属 1V1 客服经理。",
+      "policy_id": "membership-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "287c33df22b9eb7421e214d94116dc3e7af00e606e6095172e3905f7752e5a7e"
+    }
+  },
+  "会员权益#03-00": {
+    "sha256": "17bb1dda979d8bb9a63febb7bfefd421b5c22764141ebf167a140aac6134937d",
+    "chunk": {
+      "chunk_id": "会员权益#03-00",
+      "doc": "会员权益",
+      "section": "三、积分体系",
+      "text": "【会员权益 · 三、积分体系】\n- **获取**：实付 1 元 = 1 积分；评价晒图额外 +20；签到每日 +5。\n- **消耗**：100 积分 = 1 元，结账时直接抵扣，单笔最多抵扣订单金额的 50%。\n- **过期**：积分自获取之日起 24 个月有效，过期清零。",
+      "policy_id": "membership-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "f879186d3fbfd7f6ae043af2c6e363c0cb999a6083e46f6ac2c8bb6cc46df69a"
+    }
+  },
+  "会员权益#04-00": {
+    "sha256": "4968466b3f0f2a27704a0ba49cb0671dc917bbcdf01961f2355f7e3ae2eebece",
+    "chunk": {
+      "chunk_id": "会员权益#04-00",
+      "doc": "会员权益",
+      "section": "四、生日特权",
+      "text": "【会员权益 · 四、生日特权】\n- **生日当月**：购物双倍积分。\n- **生日当周**：免费一次专属生日礼盒（限钻石会员）。\n- **生日当天**：一张 88 元无门槛券（限黄金及以上）。",
+      "policy_id": "membership-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "072f140c7a4342dc9ebd20672980aadcb933086ed92f3f07b327fd8b0d3b00d2"
+    }
+  },
+  "会员权益#05-00": {
+    "sha256": "64412e0c8cdc731913f07272b8bba48eccf18ee0a2f445846c3e7c86002b799b",
+    "chunk": {
+      "chunk_id": "会员权益#05-00",
+      "doc": "会员权益",
+      "section": "五、常见问题",
+      "text": "【会员权益 · 五、常见问题】\n- **Q：等级能否手动升级？**\n  A：不可以，按近 12 个月实付金额自动结算。\n- **Q：退款是否会扣减升级所需金额？**\n  A：会，退款成功后对应消费金额从累计中扣除。\n- **Q：会员费用怎么算？**\n  A：并夕夕会员体系完全免费，不收取年费。",
+      "policy_id": "membership-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "bf2c85e61ba130546436712c5db05a399604ace86209d1ac3792e4e7bf6e6612"
+    }
+  },
+  "常见问题FAQ#01-00": {
+    "sha256": "85d7886f84bce28276d7930566b9779f725195e8e1bf1bca2d09d1af4dba3e13",
+    "chunk": {
+      "chunk_id": "常见问题FAQ#01-00",
+      "doc": "常见问题FAQ",
+      "section": "一、订单与支付",
+      "text": "【常见问题FAQ · 一、订单与支付】\n### Q1：下单后多久发货？\n普通现货商品商家承诺 48 小时内出库，预售商品按详情页公示发货时间为准。如下单超过 72 小时仍未发货，可联系客服催单或申请「未发货退款」。\n\n### Q2：支持哪些支付方式？\n目前支持微信支付、支付宝、银联快捷支付、Apple Pay、花呗分期（3/6/12 期）。暂不支持货到付款与境外信用卡。\n\n### Q3：能否修改订单信息？\n- **未发货**：可在订单详情页自助修改收货地址（24 小时内一次机会），商品规格不可修改，需取消重下。\n- **已发货**：地址不可修改，可联系快递员或在派件地址变更。\n\n### Q4：订单显示「已支付」但平台未识别怎么办？\n通常 5 分钟内自动同步。超过 30 分钟仍未同步，请联系客服并提供支付凭证截图（含交易号、金额、时间）。",
+      "policy_id": "faq-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "d3cd91076acd83d0950bcf47dc83609b12fd3945ecfc3c07902da40c4a4f9b41"
+    }
+  },
+  "常见问题FAQ#02-00": {
+    "sha256": "a832e9f7e392cbec9668d516244a74aef94dd9e2df8972fa898a59896ecfcf28",
+    "chunk": {
+      "chunk_id": "常见问题FAQ#02-00",
+      "doc": "常见问题FAQ",
+      "section": "二、商品与价格",
+      "text": "【常见问题FAQ · 二、商品与价格】\n### Q5：商品降价了能否退差价？\n- **价保期限**：签收后 7 天内（钻石会员 15 天）。\n- **价保规则**：仅同一店铺、同一商品（含规格颜色）的实付差价（含券后价）。\n- **不参与**：限时秒杀、清仓特价、定金尾款拆单价不参与价保。\n\n### Q6：商品页缺货怎么办？\n点击「到货提醒」，到货后将通过短信和站内信通知。注：补货时间不固定，热门商品可能数小时即售罄。\n\n### Q7：发现假货怎么办？\n请保留商品、包装、快递面单与吊牌，通过「申请售后 → 真假鉴别」上传照片。经品牌方鉴定为假货的，赔付订单实付金额的 3 倍（最低 500 元）。",
+      "policy_id": "faq-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "ab8293b77fe0170b4a0c2c6ef502a6bbd83fba2a4d91234c44a49d402178daf2"
+    }
+  },
+  "常见问题FAQ#03-00": {
+    "sha256": "36f8bb93520beb6d5540814c8b87d46127988b96d153437ea52fab0fac68a051",
+    "chunk": {
+      "chunk_id": "常见问题FAQ#03-00",
+      "doc": "常见问题FAQ",
+      "section": "三、售后服务",
+      "text": "【常见问题FAQ · 三、售后服务】\n### Q8：寄回商品丢失了怎么办？\n请联系当时承运的快递公司发起索赔，并将快递公司出具的丢件证明发给客服。客服根据证明协助办理退款，无需顾客承担丢件损失。\n\n### Q9：退款多久到账？\n- **微信/支付宝**：1-3 个工作日。\n- **银行卡**：3-7 个工作日。\n- **花呗/信用卡分期**：当期账单已出的，退款抵扣下期账单。\n\n### Q10：商品保修期内坏了怎么办？\n3C 数码、家电类商品保修期内出现非人为故障，由品牌方授权售后处理。可在「我的订单 → 申请售后 → 品牌维修」走线上报修流程，无需邮寄到「并夕夕」仓库。",
+      "policy_id": "faq-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "e3da9f8319095077b87b7b0877eb6d014afbea416029f2fae07b2ecca252ce31"
+    }
+  },
+  "常见问题FAQ#04-00": {
+    "sha256": "36de7527a10c794b62507939f2ecf2927b43ff78ddc7f0fec6700d7ba1fc3eb6",
+    "chunk": {
+      "chunk_id": "常见问题FAQ#04-00",
+      "doc": "常见问题FAQ",
+      "section": "四、账户与安全",
+      "text": "【常见问题FAQ · 四、账户与安全】\n### Q11：忘记密码怎么办？\n通过登录页「忘记密码」，使用注册手机号接收验证码后重置。如手机号已停用，需提供身份证照片+人脸认证申诉，5 个工作日内审核。\n\n### Q12：账户被盗如何处理？\n立即修改密码并解绑支付方式，然后联系客服冻结账户。如已发生未授权交易，提供报警回执，平台协助资金追讨。\n\n### Q13：能否注销账户？\n可以，前往「设置 → 账户安全 → 注销账户」。注销前请先处理未完成订单与未使用的优惠券、积分。注销后数据保留 30 天，30 天内可联系客服恢复。",
+      "policy_id": "faq-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "c0aee3d5959040f22971a3d9e05e192fc259d3e616caf5f40317ac55f386b6c3"
+    }
+  },
+  "退换货政策#01-00": {
+    "sha256": "686daf491ec9ef6052adce361291faf933bafe63de0bb858ce9a44ca85f97627",
+    "chunk": {
+      "chunk_id": "退换货政策#01-00",
+      "doc": "退换货政策",
+      "section": "一、七天无理由退货",
+      "text": "【退换货政策 · 一、七天无理由退货】\n### 1.1 适用范围\n自顾客签收商品之日起 7 天内（含第 7 天），在不影响商品二次销售的前提下，可申请「七天无理由退货」。这里的「不影响二次销售」指：商品本体、吊牌、包装、配件、赠品齐全，未洗涤、未使用、未损坏。\n\n### 1.2 不适用商品\n以下商品不支持七天无理由退货：\n- **个人定制类商品**：刻字、刻名、定制尺寸的鞋服等。\n- **鲜活易腐商品**：水果、海鲜、生鲜冷链等。\n- **数字化商品**：已激活的软件序列号、电子卡券、电子书。\n- **拆封后影响人身安全或健康的商品**：化妆品、内衣、贴身衣物（已拆封）。\n\n### 1.3 运费规则\n七天无理由退货由顾客承担退货运费，建议使用平台合作的「上门取件」服务（顺丰/圆通/京东物流），运费 12 元起，从退款金额中扣除。",
+      "policy_id": "return-policy-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "245e2f9f77de9bba5dee0481e36861619af08a7a62d0f5520e73d48f460d46d6"
+    }
+  },
+  "退换货政策#02-00": {
+    "sha256": "1bf01519fbeaf7e38e7591e38e9abf7db049b32e6b555ddf51efc5377434e719",
+    "chunk": {
+      "chunk_id": "退换货政策#02-00",
+      "doc": "退换货政策",
+      "section": "二、质量问题退换货",
+      "text": "【退换货政策 · 二、质量问题退换货】\n### 2.1 适用情形\n- 商品存在明显瑕疵（破损、缺件、错发、漏发）。\n- 商品功能性故障，且经客服或品牌方确认为质量问题。\n- 商品与详情页描述严重不符。\n\n### 2.2 时效与运费\n质量问题退换货时效为签收后 15 天内（含第 15 天），运费由「并夕夕」承担。退款将在仓库收货并质检通过后 1-3 个工作日内原路退回。\n\n### 2.3 举证材料\n申请质量问题退换货时，建议拍摄：\n1. 商品外观照片（瑕疵处特写 + 整体照）。\n2. 包装外观照片（用于判定运输损坏责任）。\n3. 故障演示视频（电子产品适用）。",
+      "policy_id": "return-policy-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "2c5838b8e37f015de7cebffcd1e8ad2ec72832b9991211c1af8e66fd26480760"
+    }
+  },
+  "退换货政策#03-00": {
+    "sha256": "a96f60c59c8fc69604591591a507dd5170bd01462a9ffccbab759dff30f7abb1",
+    "chunk": {
+      "chunk_id": "退换货政策#03-00",
+      "doc": "退换货政策",
+      "section": "三、退款流程",
+      "text": "【退换货政策 · 三、退款流程】\n1. 在「我的订单」中找到对应订单，点击「申请退款」。\n2. 选择退款原因并提交，可附图片说明。\n3. 客服或品牌方在 24 小时内审核（敏感商品 48 小时）。\n4. 审核通过后，按提示寄回商品（如需）。\n5. 仓库签收并质检通过后，款项原路退回支付账户。",
+      "policy_id": "return-policy-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "cec9ac315be8ff6030178cf90a857a0acd4728e6647013f03b28c620e6aed178"
+    }
+  },
+  "退换货政策#04-00": {
+    "sha256": "3a4f8f949bc710818d76c820183960412eba030034574ecf3f30c735784bcc25",
+    "chunk": {
+      "chunk_id": "退换货政策#04-00",
+      "doc": "退换货政策",
+      "section": "四、特殊场景",
+      "text": "【退换货政策 · 四、特殊场景】\n### 4.1 仅退款（不退货）\n适用于商品未发货、商品丢失、商家承认质量问题但不要求退回等场景。仅退款审核通过后 1-3 个工作日内原路退回。\n\n### 4.2 拒收退款\n顾客在签收前拒收快递，包裹原路返回仓库后，系统将自动发起退款，时效约 5-7 个工作日。\n\n### 4.3 部分退款\n对于多件商品订单，支持只退其中一件或几件，退款金额按比例计算。",
+      "policy_id": "return-policy-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "4dee1fc3211cf5a1074e9b364fb9ef4373f16bade563f23597d02a33944239cf"
+    }
+  },
+  "配送说明#01-00": {
+    "sha256": "4d782042cfc5e01d252462ba8bec5fdb7f9f343fe0fc5004eaf51cf50e901b65",
+    "chunk": {
+      "chunk_id": "配送说明#01-00",
+      "doc": "配送说明",
+      "section": "一、配送范围",
+      "text": "【配送说明 · 一、配送范围】\n「并夕夕」目前覆盖中国大陆 31 个省、自治区、直辖市，部分偏远地区（西藏阿里、新疆喀什以西、海南三沙）需要 1-3 个工作日额外发货时间。港澳台及海外暂不直接发货，需通过「并夕夕国际」入口下单。",
+      "policy_id": "delivery-policy-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "37c7894c3fcc0ee57bb9fbf143fa07030a445dd21405ba89dbb659efc7371713"
+    }
+  },
+  "配送说明#02-00": {
+    "sha256": "6124e4feec32758a28aa3d30e1533a75b554b37ca47376dd2e20632a48ec9b3c",
+    "chunk": {
+      "chunk_id": "配送说明#02-00",
+      "doc": "配送说明",
+      "section": "二、配送时效",
+      "text": "【配送说明 · 二、配送时效】\n| 区域 | 普通快递 | 当日达 | 次日达 |\n|------|----------|--------|--------|\n| 一线城市（北京、上海、广州、深圳） | 2-3 天 | 支持 | 支持 |\n| 省会城市 | 2-4 天 | 部分支持 | 支持 |\n| 地级市 | 3-5 天 | 不支持 | 部分支持 |\n| 县级及以下 | 4-7 天 | 不支持 | 不支持 |\n\n时效从「商家发货」开始计算，不包含退换货寄回与重发时间。订单中含「预售」「定制」「家具大件」标签的商品，按详情页公示时效为准。",
+      "policy_id": "delivery-policy-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "399985796b98f8fab7e7290b87d84f9e1f5dccfcbe909e3608dd3cb1f9a923f4"
+    }
+  },
+  "配送说明#03-00": {
+    "sha256": "627d3b30460fd36a1b656b626c8cecc433cf199d857b6251c84c86de123d47fc",
+    "chunk": {
+      "chunk_id": "配送说明#03-00",
+      "doc": "配送说明",
+      "section": "三、运费规则",
+      "text": "【配送说明 · 三、运费规则】\n- **包邮门槛**：单笔订单满 99 元包邮，不满则收取 8 元基础运费。\n- **大件商品**：家电、家具、健身器材按体积重计费，详情页明示。\n- **偏远地区**：新疆、西藏、青海部分区域不参与全场包邮，加收 20 元起。\n- **会员特权**：钻石会员全场包邮，无需满 99 元。",
+      "policy_id": "delivery-policy-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "443fb58626eda789f4ffb7f703d0d9456ac3d81c82a84949fb3ab232af1dd8dd"
+    }
+  },
+  "配送说明#04-00": {
+    "sha256": "efcaf7c77bc05873c743720346af3422cf5623d8a1507688c946a8fc9df3b309",
+    "chunk": {
+      "chunk_id": "配送说明#04-00",
+      "doc": "配送说明",
+      "section": "四、合作快递",
+      "text": "【配送说明 · 四、合作快递】\n并夕夕已接入顺丰速运、京东物流、圆通速递、中通快递、韵达快递、邮政 EMS。下单时由系统按照「就近仓库 + 时效优先」自动分配，不支持顾客指定快递公司，但可在「订单详情」中查看实际承运商。",
+      "policy_id": "delivery-policy-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "a5d32e93239f838fede262bad380d183e487b6a40dee1ee82c16c0d7f6640e8f"
+    }
+  },
+  "配送说明#05-00": {
+    "sha256": "6668725df0baa21b0da91183bf6825284a39740d563b902f247fe6b9c4e7c1c7",
+    "chunk": {
+      "chunk_id": "配送说明#05-00",
+      "doc": "配送说明",
+      "section": "五、收货须知",
+      "text": "【配送说明 · 五、收货须知】\n1. **当面验货**：贵重商品（手机、电脑、奢侈品）请务必当面验货后再签收，破损请直接拒收。\n2. **代收点取件**：若选择菜鸟驿站、丰巢、京东自提柜代收，请在 48 小时内取件，超时可能按弃件处理。\n3. **签收即视同确认**：签收后发现外观破损，请在 24 小时内联系客服并提供包裹照片。",
+      "policy_id": "delivery-policy-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "8cf0b973259cdf12af419933566a66eb1fda03ff2dc7fd6a6e7b8191fee6aff7"
+    }
+  },
+  "配送说明#06-00": {
+    "sha256": "7bf061e5467bf23e9515beecab2c5e29c26b4346f9eefccd5be6f37b0d897700",
+    "chunk": {
+      "chunk_id": "配送说明#06-00",
+      "doc": "配送说明",
+      "section": "六、配送异常",
+      "text": "【配送说明 · 六、配送异常】\n- **无人签收**：快递员将再尝试投递 1-2 次，仍无人签收则联系顾客或转代收点。\n- **物流停滞**：超过 3 天未更新轨迹，可联系客服发起「物流催单」。\n- **派件错误**：若快递被错派至他人，可凭面单号申请「定位寻件」。",
+      "policy_id": "delivery-policy-demo",
+      "version": "demo-1",
+      "status": "demo",
+      "effective_from": "",
+      "effective_to": "",
+      "owner": "demo-seed",
+      "source_url": "",
+      "content_hash": "0a737957658750ed693417f345f72cdeba07c138eb00901f4fec2b8be4d5c12c"
+    }
+  }
+}
